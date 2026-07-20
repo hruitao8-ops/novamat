@@ -81,4 +81,4 @@ npm run lint
 
 ## 许可证
 
-© 2024 NovaMat AI. 保留所有权利。
+© 2026 NovaMat AI. 保留所有权利。
