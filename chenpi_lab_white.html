@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>陈皮智研 · 虚拟仿真实验平台 v2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f5f0e8;--bg2:#ffffff;--bg3:#f8f5f0;--bg4:#ede9e2;
+  --blue:#4a90d9;--green:#5a9e6f;--orange:#c17d4a;--purple:#8a6ab8;
+  --red:#c0392b;--yellow:#d4922a;
+  --text:#2c2c2c;--text2:#7a7a7a;--text3:#a0a0a0;
+  --border:rgba(44,44,44,.12);
+  --shadow:0 2px 12px rgba(44,44,44,.07);
+  --shadow-hover:0 6px 24px rgba(44,44,44,.12);
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC','Segoe UI',system-ui,sans-serif;min-height:100vh}
+.topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:16px;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.logo{font-family:'Ma Shan Zheng',cursive;font-size:22px;color:var(--text);white-space:nowrap;letter-spacing:2px}
+.logo span{color:var(--orange)}
+.nav-tabs{display:flex;gap:4px;flex:1;overflow-x:auto;padding:0 8px}
+.nav-tab{padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);white-space:nowrap;transition:.15s;border:none;background:none;font-family:inherit}
+.nav-tab:hover{background:var(--bg3);color:var(--text)}
+.nav-tab.active{background:var(--orange);color:#fff}
+.badge-new{background:var(--orange);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle}
+.main-layout{display:flex;height:calc(100vh - 56px)}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:20px}
+.right-panel{width:270px;background:var(--bg2);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:16px}
+.page{display:none}.page.active{display:block}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);transition:.2s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.card-title .icon{font-size:16px}
+.aux-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+.aux-item{background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:10px 8px;cursor:pointer;text-align:center;transition:.15s;user-select:none}
+.aux-item:hover{border-color:var(--blue);background:var(--bg4)}
+.aux-item.selected{border-color:var(--green);background:rgba(90,158,111,.08)}
+.aux-item .emoji{font-size:26px;display:block;margin-bottom:4px}
+.aux-item .aux-name{font-size:11px;color:var(--text2);line-height:1.3}
+.aux-item.selected .aux-name{color:var(--green)}
+.btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:.15s;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{opacity:.85}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:.85}
+.btn-orange{background:var(--orange);color:#fff}.btn-orange:hover{opacity:.85}
+.btn-outline{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}.btn-outline:hover{background:rgba(74,144,217,.06)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.slider-group{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+.slider-row{display:grid;grid-template-columns:110px 1fr 60px;align-items:center;gap:10px}
+.slider-label{font-size:13px;color:var(--text2)}
+input[type=range]{width:100%;accent-color:var(--blue);cursor:pointer;height:4px}
+.slider-val{font-size:13px;font-weight:600;color:var(--blue);text-align:right}
+.cpei-dashboard{text-align:center;padding:16px 0}
+.cpei-score-ring{position:relative;width:140px;height:140px;margin:0 auto 12px}
+.cpei-score-ring svg{width:140px;height:140px;transform:rotate(-90deg)}
+.cpei-ring-bg{fill:none;stroke:var(--bg4);stroke-width:12}
+.cpei-ring-fg{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+.cpei-center-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.cpei-num{font-size:32px;font-weight:700;line-height:1;font-family:'Roboto Mono',monospace}
+.cpei-grade{font-size:14px;font-weight:600;margin-top:2px}
+.cpei-desc{font-size:12px;color:var(--text2)}
+.cpei-dims{display:flex;flex-direction:column;gap:6px}
+.dim-row{display:flex;align-items:center;gap:8px}
+.dim-label{font-size:11px;color:var(--text2);width:72px;flex-shrink:0}
+.dim-bar-wrap{flex:1;background:var(--bg4);border-radius:4px;height:6px;overflow:hidden}
+.dim-bar{height:6px;border-radius:4px;transition:width .6s ease}
+.dim-val{font-size:11px;color:var(--text);width:28px;text-align:right;font-family:'Roboto Mono',monospace}
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{background:var(--bg3);color:var(--text2);padding:8px 12px;text-align:left;font-weight:600;position:sticky;top:0;border-bottom:2px solid var(--border)}
+.comp-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.comp-table tr:hover td{background:var(--bg3)}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.tag-unique{background:rgba(212,146,42,.12);color:var(--yellow);border:1px solid rgba(212,146,42,.3)}
+.tag-synergy{background:rgba(90,158,111,.12);color:var(--green);border:1px solid rgba(90,158,111,.3)}
+.tag-warn{background:rgba(192,57,43,.1);color:var(--red);border:1px solid rgba(192,57,43,.2)}
+.fusion-card{background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px;border-left:4px solid var(--green)}
+.fusion-card.warn{border-left-color:var(--red)}
+.fusion-card.stability{border-left-color:var(--yellow)}
+.fusion-card.enclose{border-left-color:var(--purple)}
+.fusion-type{font-size:11px;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.fusion-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
+.fusion-score-bar{height:4px;border-radius:2px;background:var(--bg4);margin-bottom:8px}
+.fusion-score-fill{height:4px;border-radius:2px}
+.fusion-mech{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.fusion-effect{font-size:12px;color:var(--green)}
+.fusion-caution{font-size:12px;color:var(--red);margin-top:4px}
+.product-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;margin:3px}
+.product-chip .ptype{font-size:10px;color:var(--text2)}
+.retention-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sidebar-section{padding:12px 16px 4px;font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--text2);transition:.1s;border-left:3px solid transparent}
+.sidebar-item:hover{color:var(--text);background:var(--bg3)}
+.sidebar-item.active{color:var(--orange);background:rgba(193,125,74,.08);border-left-color:var(--orange)}
+.sidebar-item .s-icon{font-size:15px}
+.param-section{background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:12px}
+.optimal-tip{background:rgba(90,158,111,.08);border:1px solid rgba(90,158,111,.3);border-radius:8px;padding:10px;font-size:12px;color:var(--green);margin-top:10px;line-height:1.6}
+.warn-banner{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--red);margin-bottom:10px;display:none}
+.warn-banner.show{display:block}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty-state .emoji{font-size:48px;margin-bottom:12px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .3s ease}
+.section-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px;color:var(--text)}
+.section-badge{background:var(--orange);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.highlight-row td{background:rgba(193,125,74,.06)!important}
+.flavor-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.flavor-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.ft-citrus{background:rgba(212,146,42,.12);color:#d4922a;border:1px solid rgba(212,146,42,.3)}
+.ft-sweet{background:rgba(90,158,111,.12);color:#5a9e6f;border:1px solid rgba(90,158,111,.3)}
+.ft-bitter{background:rgba(138,106,184,.12);color:#8a6ab8;border:1px solid rgba(138,106,184,.3)}
+.ft-aroma{background:rgba(212,146,42,.15);color:#d4922a;border:1px solid rgba(212,146,42,.4)}
+.ft-fresh{background:rgba(74,144,217,.12);color:#4a90d9;border:1px solid rgba(74,144,217,.3)}
+.ft-umami{background:rgba(193,125,74,.12);color:#c17d4a;border:1px solid rgba(193,125,74,.3)}
+.ft-spicy{background:rgba(192,57,43,.1);color:#c0392b;border:1px solid rgba(192,57,43,.2)}
+.ft-nutty{background:rgba(138,106,184,.12);color:#8a6ab8;border:1px solid rgba(138,106,184,.3)}
+.ft-floral{background:rgba(212,146,42,.12);color:#d4922a;border:1px solid rgba(212,146,42,.3)}
+.recipe-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;transition:.2s}
+.recipe-card:hover{border-color:var(--blue);box-shadow:var(--shadow-hover)}
+.recipe-card.selected{border-color:var(--green);background:rgba(90,158,111,.04)}
+.recipe-name{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.recipe-emoji{font-size:20px}
+.recipe-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.recipe-ing{font-size:11px;color:var(--text2);margin-bottom:8px}
+.recipe-ing span{display:inline-block;background:var(--bg3);padding:2px 8px;border-radius:4px;margin:2px}
+.recipe-cook{font-size:11px;background:rgba(74,144,217,.06);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 6px 6px 0;line-height:1.6;margin-bottom:8px}
+.recipe-hist{font-size:11px;color:var(--orange);font-style:italic;margin-bottom:8px}
+.recipe-score{display:flex;align-items:center;gap:8px;margin-top:8px}
+.score-bar-wrap{flex:1;background:var(--bg4);height:6px;border-radius:3px;overflow:hidden}
+.score-bar{height:6px;border-radius:3px;transition:width .6s ease}
+.score-num{font-size:12px;font-weight:700;width:30px;text-align:right;font-family:'Roboto Mono',monospace}
+.match-lists{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.match-item{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:.15s}
+.match-item:hover{border-color:var(--blue);transform:translateY(-1px)}
+.match-item.best{border-color:var(--green);background:rgba(90,158,111,.04)}
+.match-name{font-size:13px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.match-score-tag{font-size:10px;padding:1px 6px;border-radius:8px;margin-left:auto}
+.match-tag-best{background:rgba(90,158,111,.15);color:#5a9e6f}
+.match-tag-good{background:rgba(74,144,217,.12);color:#4a90d9}
+.match-tag-fair{background:rgba(160,160,160,.12);color:#a0a0a0}
+.match-reason{font-size:11px;color:var(--text2);line-height:1.5}
+.flavor-meter{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.fmeter-row{display:flex;align-items:center;gap:8px}
+.fmeter-label{font-size:11px;color:var(--text2);width:56px;flex-shrink:0}
+.fmeter-bar{flex:1;background:var(--bg4);height:8px;border-radius:4px;overflow:hidden}
+.fmeter-fill{height:8px;border-radius:4px;transition:width .6s ease}
+.fmeter-val{font-size:11px;font-weight:600;width:30px;text-align:right;font-family:'Roboto Mono',monospace}
+.legal-notice{background:rgba(212,146,42,.07);border:1px solid rgba(212,146,42,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--yellow);line-height:1.6;margin-bottom:14px}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(44,44,44,.2)}
+@media(max-width:900px){.sidebar{display:none}.right-panel{display:none}}
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="logo">🍊 陈皮智研 <span>虚拟仿真实验平台</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('lab')">🧪 虚拟实验台</button>
+    <button class="nav-tab" onclick="switchPage('cpei')">📊 CPEI功效模型 <span class="badge-new">原创</span></button>
+    <button class="nav-tab" onclick="switchPage('process')">🌡️ 加工参数预测 <span class="badge-new">原创</span></button>
+    <button class="nav-tab" onclick="switchPage('chenpidb')">🔬 陈皮成分库</button>
+    <button class="nav-tab" onclick="switchPage('auxdb')">🧴 辅料成分库</button>
+    <button class="nav-tab" onclick="switchPage('recipe')">🍳 风味搭配 <span class="badge-new">新</span></button>
+    <button class="nav-tab" onclick="switchPage('fusion')">⚗️ 融合预测报告</button>
+    <button class="nav-tab" onclick="switchPage('sources')">📋 数据来源</button>
+  </div>
+</div>
+
+<div class="main-layout">
+<!-- 侧边导航 -->
+<div class="sidebar">
+  <div class="sidebar-section">实验流程</div>
+  <div class="sidebar-item active" onclick="switchPage('lab');setSideActive(this)">
+    <span class="s-icon">🧪</span>虚拟实验台
+  </div>
+  <div class="sidebar-item" onclick="switchPage('cpei');setSideActive(this)">
+    <span class="s-icon">📊</span>CPEI功效评分
+  </div>
+  <div class="sidebar-item" onclick="switchPage('process');setSideActive(this)">
+    <span class="s-icon">🌡️</span>加工参数预测
+  </div>
+  <div class="sidebar-section">数据库</div>
+  <div class="sidebar-item" onclick="switchPage('chenpidb');setSideActive(this)">
+    <span class="s-icon">🍊</span>新会陈皮成分库
+  </div>
+  <div class="sidebar-item" onclick="switchPage('auxdb');setSideActive(this)">
+    <span class="s-icon">🧴</span>辅料成分库
+  </div>
+  <div class="sidebar-section">分析结果</div>
+  <div class="sidebar-item" onclick="switchPage('recipe');setSideActive(this)">
+    <span class="s-icon">🍳</span>风味搭配推荐
+  </div>
+  <div class="sidebar-item" onclick="switchPage('fusion');setSideActive(this)">
+    <span class="s-icon">⚗️</span>融合预测报告
+  </div>
+  <div class="sidebar-section">其他</div>
+  <div class="sidebar-item" onclick="switchPage('sources');setSideActive(this)">
+    <span class="s-icon">📋</span>数据来源
+  </div>
+</div>
+
+<!-- 主内容 -->
+<div class="content">
+
+<!-- =================== 虚拟实验台 =================== -->
+<div id="page-lab" class="page active">
+  <div class="section-title">🧪 虚拟实验台 <span class="section-badge">Step 1 · 选择辅料</span></div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🍊</span>主料：新会陈皮（固定）</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+      <div style="background:var(--bg3);border:1px solid rgba(243,156,18,.4);border-radius:8px;padding:8px 12px;font-size:12px">
+        <div style="color:var(--yellow);font-weight:600">🌟 2-甲氨基苯甲酸甲酯</div>
+        <div style="color:var(--text2)">新会专属标志物 · 0.12mg/g</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(188,140,255,.4);border-radius:8px;padding:8px 12px;font-size:12px">
+        <div style="color:var(--purple);font-weight:600">⭐ 川陈皮素 Nobiletin</div>
+        <div style="color:var(--text2)">多甲氧基黄酮标志 · 4.2mg/g</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(188,140,255,.4);border-radius:8px;padding:8px 12px;font-size:12px">
+        <div style="color:var(--purple);font-weight:600">⭐ 七甲氧基黄酮</div>
+        <div style="color:var(--text2)">极稀有标志成分 · 1.8mg/g</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px">
+        <div style="color:var(--blue);font-weight:600">橙皮苷 Hesperidin</div>
+        <div style="color:var(--text2)">主要黄酮 · 18.5mg/g</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px">
+        <div style="color:var(--green);font-weight:600">陈皮多糖 CPP</div>
+        <div style="color:var(--text2)">免疫调节 · 28.0mg/g</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🧴</span>选择辅料（可多选）</div>
+    <div class="aux-grid" id="aux-grid"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="runAllAnalysis()">🚀 启动全模型分析</button>
+      <button class="btn btn-outline btn-sm" onclick="clearAux()">清空选择</button>
+      <span id="aux-count" style="font-size:12px;color:var(--text2)">已选 0 种辅料</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span>快速工艺参数设置</div>
+    <div class="slider-group">
+      <div class="slider-row">
+        <span class="slider-label">加工温度</span>
+        <input type="range" id="lab-temp" min="20" max="140" value="60" oninput="updateLabParams()">
+        <span class="slider-val" id="lab-temp-val">60°C</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">体系 pH</span>
+        <input type="range" id="lab-ph" min="2" max="10" step="0.5" value="7" oninput="updateLabParams()">
+        <span class="slider-val" id="lab-ph-val">7.0</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">处理时间</span>
+        <input type="range" id="lab-time" min="5" max="120" value="30" oninput="updateLabParams()">
+        <span class="slider-val" id="lab-time-val">30min</span>
+      </div>
+    </div>
+    <div id="lab-warn-banner" class="warn-banner"></div>
+  </div>
+
+  <!-- 实验结果预览 -->
+  <div id="lab-result-preview" style="display:none" class="fade-in">
+    <div class="card">
+      <div class="card-title"><span class="icon">📊</span>实时分析摘要</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px" id="lab-summary-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== CPEI 模型页 =================== -->
+<div id="page-cpei" class="page">
+  <div class="section-title">📊 CPEI · 陈皮复配功效指数模型
+    <span class="section-badge">原创模型 v1.0</span>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(63,185,80,.08));border-color:rgba(88,166,255,.3)">
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      <strong style="color:var(--text)">Chenpi Product Efficacy Index（CPEI）</strong> 是专为新会陈皮复配研究设计的原创综合功效评价体系。基于5个维度的加权评分，并对新会陈皮特有标志成分给予额外道地性加成，最终输出 0-100 分的功效指数，并给出 S/A/B/C/D 五级评定。
+      <br><br>
+      <strong style="color:var(--yellow)">权重分布：</strong>
+      抗氧化力 30% · 消化促进力 20% · 营养完整性 20% · 成分稳定性 15% · 安全系数 15%
+      <br>
+      <strong style="color:var(--orange)">道地性加成：</strong>每检测到1个新会特有标志物保留率>30%，CPEI额外+1.5%（最多+7.5%）
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card">
+      <div class="card-title"><span class="icon">⚙️</span>计算参数</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">当前辅料：<span id="cpei-aux-list" style="color:var(--green)">未选择</span></div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <span class="slider-label">加工温度</span>
+          <input type="range" id="cpei-temp" min="20" max="140" value="60" oninput="calcCPEI()">
+          <span class="slider-val" id="cpei-temp-val">60°C</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">体系 pH</span>
+          <input type="range" id="cpei-ph" min="2" max="10" step="0.5" value="7" oninput="calcCPEI()">
+          <span class="slider-val" id="cpei-ph-val">7.0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">处理时间</span>
+          <input type="range" id="cpei-time" min="5" max="120" value="30" oninput="calcCPEI()">
+          <span class="slider-val" id="cpei-time-val">30min</span>
+        </div>
+      </div>
+      <div id="cpei-warn" class="warn-banner"></div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div class="cpei-dashboard">
+        <div class="cpei-score-ring">
+          <svg viewBox="0 0 140 140">
+            <circle class="cpei-ring-bg" cx="70" cy="70" r="58"/>
+            <circle id="cpei-ring-fg" class="cpei-ring-fg" cx="70" cy="70" r="58" stroke="#58a6ff"
+              stroke-dasharray="0 365" stroke-dashoffset="0"/>
+          </svg>
+          <div class="cpei-center-text">
+            <div id="cpei-num" class="cpei-num" style="color:var(--blue)">--</div>
+            <div id="cpei-grade" class="cpei-grade">计算中</div>
+          </div>
+        </div>
+        <div id="cpei-desc" class="cpei-desc" style="margin-bottom:8px">请先选择辅料</div>
+        <div id="cpei-bonus-tag" style="font-size:11px;color:var(--yellow)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📏</span>五维功效详解</div>
+    <div class="cpei-dims" id="cpei-dims">
+      <div style="color:var(--text2);font-size:13px;text-align:center;padding:20px">请先选择辅料并设置参数</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📈</span>五维雷达图</div>
+    <div style="max-width:360px;margin:0 auto"><canvas id="cpei-radar" height="280"></canvas></div>
+  </div>
+</div>
+
+<!-- =================== 加工参数预测页 =================== -->
+<div id="page-process" class="page">
+  <div class="section-title">🌡️ 加工参数 → 成分保留率预测模型
+    <span class="section-badge">原创模型 v1.0</span>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,rgba(240,136,62,.08),rgba(188,140,255,.08));border-color:rgba(240,136,62,.3)">
+    <div style="font-size:13px;color:var(--text2);line-height:1.7">
+      基于文献数据拟合的热动力学衰减模型，可预测 <strong style="color:var(--text)">温度（20-140°C）× pH（2-10）× 时间（5-120min）</strong> 三参数组合下，新会陈皮12种核心成分的保留率变化曲线。重点关注 <strong style="color:var(--yellow)">新会特有标志物</strong>（2-甲氨基苯甲酸甲酯、川陈皮素、七甲氧基黄酮）在加工过程中的保留情况。
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:14px">
+    <div>
+      <div class="param-section">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)">⚙️ 加工参数设置</div>
+        <div class="slider-group">
+          <div class="slider-row">
+            <span class="slider-label">加工温度</span>
+            <input type="range" id="proc-temp" min="20" max="140" value="60" oninput="updateProcess()">
+            <span class="slider-val" id="proc-temp-val">60°C</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">体系 pH</span>
+            <input type="range" id="proc-ph" min="2" max="10" step="0.5" value="7" oninput="updateProcess()">
+            <span class="slider-val" id="proc-ph-val">7.0</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">处理时间</span>
+            <input type="range" id="proc-time" min="5" max="120" value="30" oninput="updateProcess()">
+            <span class="slider-val" id="proc-time-val">30min</span>
+          </div>
+        </div>
+        <div class="optimal-tip" id="proc-optimal-tip">
+          🎯 最优区间：温度 50-75°C，pH 6-7，时间 ≤30min<br>可最大保留新会陈皮全部标志性成分
+        </div>
+      </div>
+
+      <div class="param-section">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">📋 当前参数下成分保留率</div>
+        <div id="retention-list" style="max-height:300px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title"><span class="icon">📉</span>成分保留率 — 温度曲线（当前pH&时间固定）</div>
+        <canvas id="temp-curve-chart" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🧪</span>成分保留率 — pH曲线（当前温度&时间固定）</div>
+        <canvas id="ph-curve-chart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== 陈皮成分库 =================== -->
+<div id="page-chenpidb" class="page">
+  <div class="section-title">🍊 新会陈皮核心成分库
+    <span class="section-badge">17种成分 · 公开文献来源</span>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      标注 <span class="tag tag-unique">新会专属</span> 的成分为新会陈皮道地性标志物，不可在其他产地陈皮中等效替代。
+    </div>
+    <div style="overflow-x:auto">
+      <table class="comp-table" id="chenpi-table"></table>
+    </div>
+  </div>
+</div>
+
+<!-- =================== 辅料成分库 =================== -->
+<div id="page-auxdb" class="page">
+  <div class="section-title">🧴 辅料成分库
+    <span class="section-badge">10种辅料 · 50+成分条目</span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="aux-filter-tabs"></div>
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="comp-table" id="aux-table"></table>
+    </div>
+  </div>
+</div>
+
+<!-- =================== 风味搭配推荐 =================== -->
+<div id="page-recipe" class="page">
+  <div class="section-title">🍳 风味搭配推荐</div>
+
+  <div class="legal-notice">
+    <strong>⚠️ 本页面为烹饪风味分析功能</strong>，从化学成分与风味化学角度提供口味搭配参考，不构成任何医疗或保健建议。所有搭配推荐仅供食品研发与烹饪教学参考。
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🍊</span>新会陈皮风味属性</div>
+    <div class="flavor-meter" id="chenpi-flavor-meter"></div>
+    <div class="flavor-tags" id="chenpi-flavor-tags"></div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.7">
+      陈皮风味层次丰富：<strong style="color:var(--text)">前调为柑橘清香</strong>（柠檬烯等挥发油），<strong style="color:var(--text)">中调渐显陈香醇厚</strong>（陈化后黄酮类氧化降解产物），<strong style="color:var(--text)">尾调留有微苦回甘</strong>。与奶类同用可形成酸甜苦香平衡，口感层次分明。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🏆</span>经典搭配推荐</div>
+    <div id="recipe-list" class="match-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🔬</span>自定义风味匹配</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">从辅料库中选择食材，查看与陈皮的的风味化学匹配度：</div>
+      <div class="aux-grid" id="recipe-aux-grid"></div>
+    </div>
+    <div id="recipe-match-result" style="display:none" class="fade-in"></div>
+    <div id="recipe-match-empty" class="empty-state" style="padding:20px">
+      <div class="emoji">👆</div>
+      <div>请在上方选择至少一种辅料</div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== 融合预测报告 =================== -->
+<div id="page-fusion" class="page">
+  <div class="section-title">⚗️ 融合预测报告</div>
+  <div id="fusion-content">
+    <div class="empty-state">
+      <div class="emoji">🧬</div>
+      <div>请先在<strong>虚拟实验台</strong>选择辅料并启动分析</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content -->
+<!-- =================== 数据来源与免责声明 =================== -->
+<div id="page-sources" class="page">
+  <div class="section-title">📋 数据来源与免责声明</div>
+
+  <div class="card" style="border-left:4px solid var(--red);margin-bottom:20px">
+    <div class="card-title"><span class="icon">⚠️</span>重要学术声明</div>
+    <div style="padding:12px 16px;font-size:13px;line-height:1.8">
+      <p style="margin-bottom:8px"><strong>本平台成分数据来源于公开学术文献，并非平台自行实验测定。</strong></p>
+      <p>所有含量数据均为<strong>参考值</strong>，真实样品检测结果可能因产地、年份、品种、检测方法不同而有所差异。</p>
+      <p style="margin-top:8px;color:var(--yellow)">⚠️ 本平台预测结果仅供教学/竞赛/科普参考，不构成实际食品研发或医疗建议。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🍊</span>新会陈皮参考文献列表</div>
+    <div style="padding:0 16px 16px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:var(--bg4)">
+            <th style="padding:8px 10px;text-align:left;color:var(--text2);font-size:11px">编号</th>
+            <th style="padding:8px 10px;text-align:left;color:var(--text2);font-size:11px">文献/标准</th>
+            <th style="padding:8px 10px;text-align:left;color:var(--text2);font-size:11px">测定内容</th>
+            <th style="padding:8px 10px;text-align:left;color:var(--text2);font-size:11px">数据类型</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[1]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">杨秀娟 等.《中国医院药学杂志》, 2019</td><td style="padding:8px 10px;border-top:1px solid var(--border)">橙皮苷、川陈皮素、橘皮素、辛弗林HPLC实测</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#3fb950">文献实测</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[2]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">《食品工业科技》2021, 42(9): 245</td><td style="padding:8px 10px;border-top:1px solid var(--border)">新会陈皮挥发油GC-MS组分分析</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#e3b341">区间估算</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[3]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">《中国药典》2025年版 一部</td><td style="padding:8px 10px;border-top:1px solid var(--border)">橙皮苷、川陈皮素+橘皮素总量下限标准</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#3fb950">法定标准</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[4]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">《中成药》2024（复方新会陈皮含片）</td><td style="padding:8px 10px;border-top:1px solid var(--border)">含片中各成分HPLC实测值</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#3fb950">文献实测</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[5]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">《药物分析杂志》2021（品种对比研究）</td><td style="padding:8px 10px;border-top:1px solid var(--border)">不同陈皮品种橙皮苷、川陈皮素对比</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#3fb950">文献实测</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[6]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">刘文粢 等（GC-MS-DS法）</td><td style="padding:8px 10px;border-top:1px solid var(--border)">新会陈皮挥发油总量及组分</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#e3b341">区间估算</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[7]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">广东省农业科学院 王旭 等, 2024</td><td style="padding:8px 10px;border-top:1px solid var(--border)">2-甲氨基苯甲酸甲酯为广陈皮特征成分（含量高于普通陈皮）</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#e3b341">定性描述</td></tr>
+          <tr><td style="padding:8px 10px;border-top:1px solid var(--border)">[8]</td><td style="padding:8px 10px;border-top:1px solid var(--border)">《维普期刊》GC-MS定量分析方法</td><td style="padding:8px 10px;border-top:1px solid var(--border)">2-甲氨基苯甲酸甲酯定量分析方法（缺含量值）</td><td style="padding:8px 10px;border-top:1px solid var(--border);color:#e3b341">方法论文</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:14px;padding:12px;background:rgba(88,166,255,.05);border-radius:8px;font-size:12px;color:var(--text2);line-height:2">
+        <strong style="color:var(--blue)">数据可靠度说明：</strong><br>
+        <span style="color:#3fb950">文献实测</span> — 有具体HPLC/GC-MS测定数值，可直接引用<br>
+        <span style="color:#e3b341">区间估算</span> — 有含量范围，取中位保守值；建议自行验证<br>
+        <span style="color:#e3b341">定性描述</span> — 有成分存在描述，缺精确数值，已标注"待精确查证"
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🧴</span>辅料及融合规则文献依据</div>
+    <div style="padding:12px 16px;font-size:13px;line-height:2;color:var(--text2)">
+      <p>📖 辅料成分：《中国食物成分表》/ USDA National Nutrient Database</p>
+      <p>📖 蛋白质-多酚相互作用：《中国食品学报》《食品科学》（维普/CNKI）</p>
+      <p>📖 FDA辛弗林安全性评估报告（2009, 2015更新版）</p>
+      <p>📖 纳米乳/脂质体递送系统：《Food Chemistry》等食品化学文献</p>
+      <p>📖 美拉德反应食品化学原理：《Food Chemistry》相关研究</p>
+    </div>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--yellow)">
+    <div class="card-title"><span class="icon">🛡️</span>免责声明</div>
+    <div style="padding:12px 16px;font-size:13px;line-height:1.9;color:var(--text2)">
+      <p>1. 本平台为<strong>虚拟仿真教学/竞赛/科普工具</strong>，所有成分数据和预测结果仅供参考，不构成实际食品研发或医疗建议。</p>
+      <p>2. 实际食品研发请以专业机构检测报告为准，本平台不对任何因使用本平台数据而产生的直接或间接损失负责。</p>
+      <p>3. 本平台原创模型（CPEI v1.0 / 加工参数预测 v1.0）为教学设计，不构成权威医学或营养学建议。</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- 右侧面板 -->
+<div class="right-panel">
+  <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)">📊 实验数据面板</div>
+
+  <!-- CPEI 仪表（迷你版） -->
+  <div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:6px">CPEI 功效指数</div>
+    <div id="right-cpei-score" style="font-size:36px;font-weight:700;color:var(--blue)">--</div>
+    <div id="right-cpei-grade" style="font-size:13px;color:var(--text2)">未计算</div>
+  </div>
+
+  <!-- 当前参数 -->
+  <div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:12px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px">当前工艺参数</div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">温度</span><span id="right-temp" style="color:var(--orange)">60°C</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">pH</span><span id="right-ph" style="color:var(--blue)">7.0</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">时间</span><span id="right-time" style="color:var(--green)">30min</span></div>
+    </div>
+  </div>
+
+  <!-- 标志物保留率 -->
+  <div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:12px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px">新会标志物保留率</div>
+    <div id="right-markers" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <!-- 选中辅料 -->
+  <div style="background:var(--bg3);border-radius:10px;padding:12px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px">已选辅料</div>
+    <div id="right-aux" style="font-size:12px;color:var(--text2)">未选择</div>
+  </div>
+</div>
+
+</div><!-- end main-layout -->
+
+<script>
+/**
+ * 陈皮智研 · 成分数据库 & 融合预测引擎 v2.0（内嵌版）
+ *
+ * ============================================================
+ * 数据来源说明
+ * ============================================================
+ * 本数据库成分含量数据来自以下公开学术文献，含量单位：mg/g（mg per g干重）
+ *
+ * 【主要参考文献】
+ * [1] 杨秀娟, 巢颖欣, 蔡轶, 胡坪君, 陈柏忠, 郑国栋.
+ *     新会陈皮化学成分的综合分析测定研究[J].
+ *     《中国医院药学杂志》, 2019. （HPLC黄酮/辛弗林实测值）
+ *     链接: https://www.sohu.com/a/307966906_120132813
+ *
+ * [2] 陈皮挥发油组成分析及其单体的抗氧化性研究[J].
+ *     食品工业科技, 2021, 42(9): 245.
+ *     （挥发油GC-MS组分分析，新会陈皮挥发油特征）
+ *     链接: http://sf1970.cnif.cn/article/2021/0253-990X/2021-9-245.shtml
+ *
+ * [3] 《中国药典》2025年版 一部.
+ *     陈皮：橙皮苷≥2.5%；广陈皮：橙皮苷≥1.75%，川陈皮素+橘皮素总量≥0.40%.
+ *     链接: https://db.ouryao.com/yaodian/v2025/view?id=1&docid=49447
+ *
+ * [4] 复方新会陈皮含片中橙皮苷、川陈皮素、橘皮素的含量测定[J].
+ *     中成药, 2024. （含片基质中各成分HPLC实测值）
+ *     链接: http://www.knowcat.cn/p/20240707/1357226.html
+ *
+ * [5] 不同陈皮来源药材中橙皮苷、川陈皮素、橘皮素和辛弗林的含量差异[J].
+ *     药物分析杂志, 2021. （不同品种对比数据）
+ *
+ * [6] 刘文粢 等. GC-MS-DS法测定新会陈皮挥发油成分及含量.
+ *     （新会陈皮挥发油总量研究）
+ *
+ * [7] 广东省农业科学院 王旭 等.
+ *     陈皮产地溯源及鉴伪技术研究, 2024.
+ *     （2-甲氨基苯甲酸甲酯为广陈皮特征成分，含量高于普通陈皮）
+ *     链接: https://k.sina.cn/article_2593325252_9a9300c400101lmrs.html
+ *
+ * [8] 气相色谱-质谱法测定新会陈皮中甲氨基苯甲酸甲酯含量[J].
+ *     维普期刊. （2-甲氨基苯甲酸甲酯定量分析方法）
+ *     链接: https://lib.cqvip.com/Qikan/Article/Detail?id=7108859424
+ *
+ * 【含量标注说明】
+ *  - [文献实测] 标注具体论文测定值
+ *  - [文献区间估算] 基于多篇文献的含量范围，取中位保守值
+ *  - [文献定性描述] 有定性描述但无精确数值，依据文献逻辑估算
+ *
+ * ============================================================
+ */
+
+// =============================================
+// 一、新会陈皮核心成分数据库
+// 数据来源: [1]-[8]
+// =============================================
+const CHENPI_DB = {
+  name: "新会陈皮（Citrus reticulata 'Chachi'）",
+  source: "广东省新会区，道地药材，药食同源",
+  uniqueMarkers: ["2-甲氨基苯甲酸甲酯", "川陈皮素", "七甲氧基黄酮"],
+  literatureNote: "含量数据主要来源：文献[1]HPLC实测 + 文献[3]药典标准 + 文献[6]挥发油研究",
+  components: {
+    volatileOils: [
+      { id: "V01", name: "2-甲氨基苯甲酸甲酯", en: "Methyl N-methylanthranilate",
+        content: 0.15, unit: "mg/g", isUnique: true, dataSource: "文献区间估算[7][8]",
+        effect: "新会陈皮/广陈皮专属标志成分，具有抑制铜绿假单胞菌群体感应效果，为广陈皮特征成分",
+        cas: "85-91-6", category: "挥发油",
+        solubility: "脂溶性", heatStability: "中等（>80°C分解）", phRange: "5-9稳定",
+        note: "【重要】具体精确含量暂无公开HPLC定量论文，此值为文献[7]GC-MS定性描述估算，建议参考",
+        color: "#e74c3c" },
+      { id: "V02", name: "α-甜橙醛", en: "α-Sinensal",
+        content: 0.08, unit: "mg/g", isUnique: true, dataSource: "文献区间估算[2]",
+        effect: "新会/广陈皮特征香气成分，具有抗炎活性",
+        cas: "17909-77-2", category: "挥发油",
+        solubility: "脂溶性", heatStability: "低（>60°C挥发）", phRange: "中性稳定",
+        color: "#e67e22" },
+      { id: "V03", name: "D-柠檬烯", en: "D-Limonene",
+        content: 10.0, unit: "mg/g", isUnique: false, dataSource: "文献区间估算[2][6]",
+        effect: "主要香气成分（占挥发油50-65%），促进消化道蠕动，有抑菌作用",
+        cas: "5989-27-5", category: "挥发油",
+        solubility: "脂溶性", heatStability: "低（>70°C快速挥发）", phRange: "酸性条件下稳定",
+        note: "挥发油总量约2%[6]，柠檬烯占50-65%[2]，故估算约10mg/g（保守下限）",
+        color: "#f39c12" },
+      { id: "V04", name: "γ-萜品烯(γ-松油烯)", en: "γ-Terpinene",
+        content: 3.5, unit: "mg/g", isUnique: false, dataSource: "文献区间估算[2]",
+        effect: "第二主要挥发油成分，抗氧化、抗炎，与柠檬烯协同增效；新会陈皮的D-柠檬烯/γ-萜品烯值较普通陈皮低",
+        cas: "99-85-4", category: "挥发油",
+        solubility: "脂溶性", heatStability: "低", phRange: "中性",
+        note: "文献[2]描述为第二主要成分，取挥发油约18%估算",
+        color: "#f1c40f" },
+      { id: "V05", name: "β-月桂烯", en: "β-Myrcene",
+        content: 1.2, unit: "mg/g", isUnique: false, dataSource: "文献区间估算[2]",
+        effect: "镇痛消炎，与其他萜烯协同增效",
+        cas: "123-35-3", category: "挥发油",
+        solubility: "脂溶性", heatStability: "低", phRange: "弱酸稳定",
+        note: "含量约占挥发油6%[2]，取约1.2mg/g",
+        color: "#2ecc71" }
+    ],
+    flavonoids: [
+      { id: "F01", name: "橙皮苷", en: "Hesperidin",
+        content: 35.51, unit: "mg/g", isUnique: false, dataSource: "文献实测[1]",
+        effect: "含量最高黄酮，强抗氧化、降血压、抗炎；可与乳清蛋白通过非共价相互作用形成复合物，提升蛋白抗氧化活性（DPPH清除率可提升25-40%）",
+        cas: "520-26-3", category: "黄酮",
+        solubility: "水溶（碱性pH>7易溶，酸性易析出）", heatStability: "高（100°C稳定）", phRange: "pH>7易溶；pH<4析出",
+        note: "文献[1]HPLC实测：3.5508%；药典[3]广陈皮≥1.75%；新会陈皮品质优于此下限",
+        interaction: "与乳清蛋白形成非共价复合物，改变蛋白结构，提升功能特性",
+        color: "#9b59b6" },
+      { id: "F02", name: "川陈皮素", en: "Nobiletin",
+        content: 4.27, unit: "mg/g", isUnique: true, dataSource: "文献实测[1]",
+        effect: "新会陈皮高含量标志性多甲氧基黄酮，抗鼻咽癌、神经保护，高度脂溶性，生物利用度低需纳米递送技术",
+        cas: "478-01-3", category: "黄酮",
+        solubility: "脂溶性", heatStability: "高", phRange: "酸性稳定",
+        note: "文献[1]HPLC实测：0.4271%；药典[3]广陈皮川陈皮素+橘皮素总量≥0.40%",
+        color: "#8e44ad" },
+      { id: "F03", name: "七甲氧基黄酮(3,5,6,7,8,3',4'-HMF)", en: "Heptamethoxyflavone",
+        content: 2.0, unit: "mg/g", isUnique: true, dataSource: "文献定性描述估算[1]",
+        effect: "新会陈皮特征多甲氧基黄酮，抗肿瘤、抗炎，市面极少产品富含此成分",
+        cas: "1178-24-1", category: "黄酮",
+        solubility: "脂溶性", heatStability: "高", phRange: "酸性稳定",
+        note: "文献[1]明确检出但未给具体数值；多甲氧基黄酮UV总量1.2424%，此为估算分配值",
+        color: "#6c3483" },
+      { id: "F04", name: "橘皮素", en: "Tangeretin",
+        content: 3.24, unit: "mg/g", isUnique: false, dataSource: "文献实测[1]",
+        effect: "多甲氧基黄酮，抑制肿瘤细胞增殖，神经保护，与川陈皮素常共存",
+        cas: "481-53-8", category: "黄酮",
+        solubility: "脂溶性", heatStability: "高", phRange: "酸性稳定",
+        note: "文献[1]HPLC实测：0.3236%；文献[3]广陈皮川陈皮素+橘皮素总量≥0.40%",
+        color: "#7d3c98" },
+      { id: "F05", name: "新橙皮苷", en: "Neohesperidin",
+        content: 5.0, unit: "mg/g", isUnique: false, dataSource: "文献区间估算[1][5]",
+        effect: "强抗氧化，可与乳清蛋白非共价结合提升乳清蛋白抗氧化性，改善食品蛋白功能特性",
+        cas: "13241-33-3", category: "黄酮",
+        solubility: "水溶（碱性）", heatStability: "中等", phRange: "pH>6",
+        note: "文献[5]温州蜜柑含新橙皮苷，新会陈皮[1]未单独测定，此为文献[5]同族黄酮估算",
+        interaction: "与乳清蛋白结合，改善乳蛋白功能特性",
+        color: "#a569bd" }
+    ],
+    polysaccharides: [
+      { id: "P01", name: "陈皮多糖（CPP）", en: "Citrus Peel Polysaccharide",
+        content: 45.0, unit: "mg/g", isUnique: false, dataSource: "文献区间估算",
+        effect: "免疫调节、调节肠道菌群、降血糖；可与蛋白质结合改善体系稳定性；与β-葡聚糖协同增强肠道屏障",
+        category: "多糖",
+        solubility: "水溶性", heatStability: "高", phRange: "中性碱性稳定",
+        note: "【待精确查证】具体含量百分比需查阅原文献，本值为参考估算",
+        interaction: "与蛋白质结合形成糖-蛋白复合物，提升乳化稳定性；与β-葡聚糖协同免疫调节",
+        color: "#1abc9c" }
+    ],
+    alkaloids: [
+      { id: "A01", name: "辛弗林", en: "Synephrine",
+        content: 2.79, unit: "mg/g", isUnique: false, dataSource: "文献实测[1]",
+        effect: "促进脂肪代谢，收缩支气管，升压扩瞳；与咖啡因同时摄入可能增加心血管风险（FDA警示）",
+        category: "生物碱",
+        solubility: "水溶性", heatStability: "中等", phRange: "酸性稳定",
+        note: "文献[1]HPLC实测：0.2786%；文献[韦正]广陈皮贮藏期间有变化；青柑皮含量高于陈皮",
+        caution: "⚠️ 与咖啡因同时摄入可能增加心血管风险，建议控制剂量（辛弗林<30mg/日）",
+        color: "#e74c3c" }
+    ],
+    minerals: [
+      { id: "M01", name: "钾 (K)",  content: 14.5, unit: "mg/g", dataSource: "文献区间估算", color: "#f39c12" },
+      { id: "M02", name: "钙 (Ca)", content: 4.20, unit: "mg/g", dataSource: "文献区间估算", color: "#3498db" },
+      { id: "M03", name: "镁 (Mg)", content: 1.10, unit: "mg/g", dataSource: "文献区间估算", color: "#2980b9" },
+      { id: "M04", name: "铁 (Fe)", content: 0.20, unit: "mg/g", dataSource: "文献区间估算", color: "#e74c3c" },
+      { id: "M05", name: "锌 (Zn)", content: 0.08, unit: "mg/g", dataSource: "文献区间估算", color: "#95a5a6" }
+    ]
+  }
+};
+
+// =============================================
+// 二、常见辅料成分数据库
+// 辅料数据来源: USDA食物成分数据库 / 公开食品营养成分表
+// =============================================
+const AUXILIARY_DB = {
+  "牛奶（全脂）": {
+    icon: "🥛", color: "#ecf0f1",
+    flavor: { sweet: 80, umami: 30, fresh: 40 },
+    description: "全脂牛奶，含丰富蛋白质、钙、脂肪",
+    source: "《中国食物成分表》/ USDA营养数据库",
+    components: [
+      { id: "AU01", name: "酪蛋白", en: "Casein", content: 28.0, unit: "mg/mL",
+        category: "蛋白质", solubility: "胶体态", dataSource: "文献实测[食物成分表]",
+        interaction: "可与橙皮苷、多酚通过氢键/疏水相互作用形成非共价复合物，改变蛋白结构，提升乳化稳定性" },
+      { id: "AU02", name: "乳清蛋白（β-乳球蛋白）", en: "β-Lactoglobulin", content: 5.0, unit: "mg/mL",
+        category: "蛋白质", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "与橙皮苷/新橙皮苷形成非共价复合物（氢键+疏水作用），DPPH清除率可提升约25-40%" },
+      { id: "AU03", name: "乳脂肪", en: "Milk Fat", content: 32.0, unit: "mg/mL",
+        category: "脂肪", solubility: "脂溶", dataSource: "文献实测[食物成分表]",
+        interaction: "可作为川陈皮素等高度脂溶性成分的天然载体，形成纳米乳提升生物利用度（提升3-5倍）" },
+      { id: "AU04", name: "乳糖", en: "Lactose", content: 48.0, unit: "mg/mL",
+        category: "糖类", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "与陈皮多糖协同形成复合糖基化产物；掩盖苦味，改善适口性" },
+      { id: "AU05", name: "钙 (Ca)", en: "Calcium", content: 1.2, unit: "mg/mL",
+        category: "矿物质", dataSource: "文献实测[食物成分表]",
+        interaction: "与陈皮中Ca协同；橙皮苷促进成骨细胞活性，补钙协同增效" }
+    ]
+  },
+  "蜂蜜": {
+    icon: "🍯", color: "#f39c12",
+    flavor: { sweet: 95, aroma: 30, floral: 20 },
+    description: "天然蜂蜜，含果糖、葡萄糖、多酚",
+    source: "《中国食物成分表》",
+    components: [
+      { id: "HO01", name: "果糖", en: "Fructose", content: 380.0, unit: "mg/g",
+        category: "糖类", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "高糖环境抑制橙皮苷结晶析出，提升溶解稳定性；与氨基酸发生美拉德反应产生风味" },
+      { id: "HO02", name: "葡萄糖", en: "Glucose", content: 310.0, unit: "mg/g",
+        category: "糖类", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "参与美拉德反应，与陈皮微量氨基酸反应生成焦糖风味物质" },
+      { id: "HO03", name: "黄酮类（槲皮素等）", en: "Quercetin etc.", content: 0.08, unit: "mg/g",
+        category: "多酚", solubility: "微溶", dataSource: "文献实测[食物成分表]",
+        interaction: "槲皮素与陈皮黄酮协同抗氧化，DPPH叠加效应约40%" },
+      { id: "HO04", name: "过氧化氢酶", en: "Catalase", content: 0.5, unit: "U/mL",
+        category: "酶类", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "⚠️ 高温（>60°C）灭活；与陈皮提取物混合加工时温度不宜超过60°C" }
+    ]
+  },
+  "全脂奶粉": {
+    icon: "🧴", color: "#bdc3c7",
+    flavor: { sweet: 75, umami: 25, fresh: 35 },
+    description: "干燥全脂奶粉，蛋白质含量高于鲜奶约3倍",
+    source: "《中国食物成分表》/ USDA",
+    components: [
+      { id: "MP01", name: "酪蛋白", en: "Casein", content: 190.0, unit: "mg/g",
+        category: "蛋白质", solubility: "复溶后胶体态", dataSource: "文献实测[食物成分表]",
+        interaction: "与陈皮多酚形成稳定的蛋白-多酚复合物微囊，可用于固体产品研发" },
+      { id: "MP02", name: "乳清蛋白", en: "Whey Protein", content: 60.0, unit: "mg/g",
+        category: "蛋白质", solubility: "复溶后水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "与橙皮苷结合后抗氧化活性提升，改善乳化性和溶解性" },
+      { id: "MP03", name: "乳糖", en: "Lactose", content: 380.0, unit: "mg/g",
+        category: "糖类", solubility: "复溶后水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "溶解后与多糖协同；适合固体复配产品研发" },
+      { id: "MP04", name: "钙", en: "Calcium", content: 9.0, unit: "mg/g",
+        category: "矿物质", dataSource: "文献实测[食物成分表]",
+        interaction: "强化陈皮补钙功效，橙皮苷促进钙吸收，两者协同" }
+    ]
+  },
+  "姜汁": {
+    icon: "🫚", color: "#e67e22",
+    flavor: { spicy: 90, aroma: 60, fresh: 30 },
+    description: "鲜姜榨汁，含姜辣素、姜酮等辛香成分",
+    source: "《中国食物成分表》/ 姜辣素文献",
+    components: [
+      { id: "GI01", name: "6-姜辣素", en: "6-Gingerol", content: 2.1, unit: "mg/mL",
+        category: "酚类", solubility: "脂溶", dataSource: "文献区间估算[姜文献]",
+        interaction: "与陈皮挥发油协同，激活TRPV1通道，促消化理气（经典配伍：陈皮+生姜）；与柠檬烯协同抗菌" },
+      { id: "GI02", name: "6-姜酮醇", en: "6-Shogaol", content: 0.8, unit: "mg/mL",
+        category: "酚类", solubility: "脂溶", dataSource: "文献区间估算[姜文献]",
+        interaction: "与橙皮苷协同抗炎，增强黄酮类成分稳定性；加热后由姜辣素转化生成" },
+      { id: "GI03", name: "姜烯（姜挥发油）", en: "Zingiberene", content: 1.5, unit: "mg/mL",
+        category: "挥发油", solubility: "脂溶", dataSource: "文献区间估算[姜文献]",
+        interaction: "与柠檬烯协同增强整体抗菌效果；与2-甲氨基苯甲酸甲酯产生独特香气协同" }
+    ]
+  },
+  "红糖": {
+    icon: "🧂", color: "#c0392b",
+    flavor: { sweet: 90, aroma: 50, nutty: 30 },
+    description: "原蔗糖，含蔗糖、矿物质、少量酚类",
+    source: "《中国食物成分表》",
+    components: [
+      { id: "RS01", name: "蔗糖", en: "Sucrose", content: 850.0, unit: "mg/g",
+        category: "糖类", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "可做溶剂载体；加热时与氨基酸发生美拉德反应，掩盖陈皮苦味，赋予焦糖-陈皮复合风味" },
+      { id: "RS02", name: "类黑素（美拉德产物）", en: "Melanoidins", content: 5.0, unit: "mg/g",
+        category: "多酚", solubility: "水溶", dataSource: "文献区间估算[美拉德文献]",
+        interaction: "与陈皮多酚叠加，形成独特风味与抗氧化复合物" },
+      { id: "RS03", name: "铁", en: "Iron", content: 0.4, unit: "mg/g",
+        category: "矿物质", dataSource: "文献实测[食物成分表]",
+        caution: "⚠️ 高铁环境下，橙皮苷可能发生氧化变色（Fe³⁺催化）；酸性条件可缓解" }
+    ]
+  },
+  "燕麦粉": {
+    icon: "🌾", color: "#d4ac0d",
+    flavor: { sweet: 50, nutty: 70, umami: 20 },
+    description: "燕麦研磨粉，含β-葡聚糖、蛋白质",
+    source: "《中国食物成分表》",
+    components: [
+      { id: "OA01", name: "β-葡聚糖", en: "β-Glucan", content: 40.0, unit: "mg/g",
+        category: "膳食纤维", solubility: "水溶（热水）", dataSource: "文献实测[食物成分表]",
+        interaction: "与陈皮多糖协同，增强肠道益生效果（双重多糖调节肠道菌群）；降胆固醇协同；形成凝胶网络改善口感" },
+      { id: "OA02", name: "燕麦蛋白", en: "Oat Protein", content: 120.0, unit: "mg/g",
+        category: "蛋白质", solubility: "弱碱性水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "与多酚结合形成凝胶网络，可用于固态复配产品研发；改善植物蛋白营养价值" },
+      { id: "OA03", name: "燕麦酚（阿魏酸）", en: "Avenanthramides", content: 0.6, unit: "mg/g",
+        category: "酚类", solubility: "微溶", dataSource: "文献区间估算[燕麦文献]",
+        interaction: "与陈皮黄酮叠加，抗氧化协同增效；阿魏酸是燕麦特有酚类物质，与陈皮黄酮互补" }
+    ]
+  },
+  "豆浆": {
+    icon: "🫘", color: "#f0e68c",
+    flavor: { sweet: 40, umami: 60, fresh: 30 },
+    description: "大豆制品，富含大豆异黄酮、蛋白质",
+    source: "《中国食物成分表》",
+    components: [
+      { id: "SO01", name: "大豆异黄酮（大豆苷元）", en: "Daidzein", content: 0.6, unit: "mg/mL",
+        category: "异黄酮", solubility: "水溶（碱性）", dataSource: "文献实测[食物成分表]",
+        interaction: "与橙皮苷协同抗氧化，两种黄酮类互补（大豆异黄酮+柑橘黄酮）协同激活Nrf2抗氧化通路" },
+      { id: "SO02", name: "大豆蛋白（β-伴球蛋白）", en: "β-Conglycinin", content: 35.0, unit: "mg/mL",
+        category: "蛋白质", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "与陈皮多酚形成非共价复合物，改善大豆蛋白溶解性和功能特性；可能形成乳化体系" },
+      { id: "SO03", name: "卵磷脂", en: "Lecithin", content: 3.0, unit: "mg/mL",
+        category: "磷脂", solubility: "水溶（胶体）", dataSource: "文献实测[食物成分表]",
+        interaction: "作为天然乳化剂，可包裹川陈皮素等高度脂溶性黄酮，提升生物利用度（纳米乳/脂质体形成）" }
+    ]
+  },
+  "茶叶提取物": {
+    icon: "🍵", color: "#2ecc71",
+    flavor: { bitter: 50, aroma: 80, fresh: 50 },
+    description: "绿茶/红茶提取，含儿茶素（EGCG）、咖啡因",
+    source: "《中国食物成分表》/ 茶多酚文献",
+    components: [
+      { id: "TE01", name: "EGCG（表没食子儿茶素没食子酸酯）", en: "EGCG", content: 12.0, unit: "mg/g",
+        category: "儿茶素", solubility: "水溶", dataSource: "文献区间估算[茶文献]",
+        interaction: "与橙皮苷协同，形成强力抗氧化协同体，DPPH清除率叠加约40%；激活Nrf2通路双重抗氧化",
+        caution: "⚠️ 高浓度EGCG可能与蛋白质强力结合导致蛋白析出，需控制比例" },
+      { id: "TE02", name: "咖啡因", en: "Caffeine", content: 25.0, unit: "mg/g",
+        category: "生物碱", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        caution: "⚠️ 与陈皮辛弗林同时摄入可能增加心率和血压（FDA警示），建议控制剂量或避免同时大量摄入" },
+      { id: "TE03", name: "茶多酚（总）", en: "Tea Polyphenols", content: 180.0, unit: "mg/g",
+        category: "多酚", solubility: "水溶", dataSource: "文献实测[茶文献]",
+        interaction: "与陈皮黄酮叠加，形成多酚协同抗氧化体系（互补的HAT/SPLET清除机制）" }
+    ]
+  },
+  "枸杞提取物": {
+    icon: "🫐", color: "#e74c3c",
+    flavor: { sweet: 60, umami: 20, fresh: 40 },
+    description: "枸杞干果提取，含玉米黄质、枸杞多糖、甜菜碱",
+    source: "《中国食物成分表》/ 枸杞文献",
+    components: [
+      { id: "GO01", name: "玉米黄质", en: "Zeaxanthin", content: 0.5, unit: "mg/g",
+        category: "类胡萝卜素", solubility: "脂溶", dataSource: "文献实测[食物成分表]",
+        interaction: "与脂溶性黄酮（川陈皮素）协同护眼，脂溶性成分在体内吸收途径相似，协同递送" },
+      { id: "GO02", name: "枸杞多糖（LBP）", en: "Lycium Polysaccharide", content: 30.0, unit: "mg/g",
+        category: "多糖", solubility: "水溶", dataSource: "文献实测[枸杞文献]",
+        interaction: "与陈皮多糖协同，激活肠道先天免疫（Toll样受体），双重多糖调节肠道菌群，增强免疫协同" },
+      { id: "GO03", name: "甜菜碱", en: "Betaine", content: 2.8, unit: "mg/g",
+        category: "生物碱", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "保护肝细胞，与陈皮辛弗林协同促代谢；但注意总碱量控制，避免过量" }
+    ]
+  },
+  "山楂提取物": {
+    icon: "🍎", color: "#c0392b",
+    flavor: { sweet: 55, bitter: 50, citrus: 30 },
+    description: "山楂干果提取，含金丝桃苷、绿原酸、有机酸",
+    source: "《中国食物成分表》/ 山楂文献",
+    components: [
+      { id: "HA01", name: "金丝桃苷", en: "Hyperoside", content: 8.0, unit: "mg/g",
+        category: "黄酮", solubility: "微溶（热水）", dataSource: "文献区间估算[山楂文献]",
+        interaction: "与橙皮苷协同，强化降脂护心功效（两种黄酮互补，调节血脂代谢通路）" },
+      { id: "HA02", name: "绿原酸", en: "Chlorogenic Acid", content: 12.0, unit: "mg/g",
+        category: "酚酸", solubility: "水溶", dataSource: "文献区间估算[山楂文献]",
+        interaction: "酸性环境下与陈皮成分稳定共存；与橙皮苷协同抑菌（双酚抑菌机制）" },
+      { id: "HA03", name: "有机酸（苹果酸等）", en: "Organic Acids", content: 50.0, unit: "mg/g",
+        category: "有机酸", solubility: "水溶", dataSource: "文献实测[食物成分表]",
+        interaction: "降低体系pH（3-5），有利于多甲氧基黄酮稳定；但可能加速挥发油挥散；抑制蛋白-多酚结合时析出风险" }
+    ]
+  }
+};
+
+// =============================================
+// 三、成分融合预测引擎（9条规则）
+// 规则依据: 蛋白质-多酚相互作用文献 + 食品化学原理
+// =============================================
+const FUSION_ENGINE = {
+  reactionRules: [
+    {
+      id: "R01",
+      trigger: { chenpi: ["F01", "F05"], auxiliary: ["酪蛋白", "乳清蛋白", "大豆蛋白", "燕麦蛋白"] },
+      product: "多酚-蛋白非共价复合物",
+      productEn: "Polyphenol-Protein Non-covalent Complex",
+      type: "协同增效",
+      mechanism: "橙皮苷/新橙皮苷通过氢键（酚羟基与羰基）和疏水作用（苯环与蛋白疏水内核）与蛋白质结合，改变蛋白三级结构，形成非共价复合物。文献研究：复合物DPPH清除率可提升约25-40%，同时改善蛋白乳化性和表面活性。",
+      effect: "✅ 抗氧化增强 | ✅ 乳化稳定性提升 | ✅ 缓释递送活性成分",
+      caution: null,
+      score: 92,
+      literatureBase: "新橙皮苷-乳清蛋白复合物研究（维普期刊）；橙皮苷-乳清蛋白相互作用机制",
+      marketProducts: [
+        { name: "金装橙皮苷乳清蛋白粉", brand: "多个运动营养品牌", type: "运动营养" },
+        { name: "柑橘多酚豆奶", brand: "植物基饮料品牌", type: "功能饮品" },
+        { name: "柑橘蛋白复合片", brand: "保健品企业", type: "保健食品" }
+      ]
+    },
+    {
+      id: "R02",
+      trigger: { chenpi: ["F01", "F02", "F03", "F04", "F05"], auxiliary: ["茶多酚", "EGCG", "金丝桃苷", "绿原酸", "槲皮素"] },
+      product: "多酚协同抗氧化复合体",
+      productEn: "Polyphenol Synergistic Antioxidant Complex",
+      type: "协同增效",
+      mechanism: "不同结构多酚通过互补的自由基清除机制（HAT：氢原子转移 / SPLET：质子耦合电子转移）协同清除自由基。文献研究：混合多酚总抗氧化活性高于单独之和，协同因子1.3-1.8。",
+      effect: "✅ 抗氧化协同增强（DPPH叠加约40%）| ✅ 抗炎双通路激活（Nrf2+NF-κB）",
+      caution: "⚠️ 高浓度EGCG可能与蛋白质大量结合导致蛋白析出",
+      score: 88,
+      literatureBase: "多酚抗氧化协同文献（spgykj.com）；蛋白质-多酚互作机制",
+      marketProducts: [
+        { name: "陈皮普洱茶", brand: "广东茶企", type: "茶饮料" },
+        { name: "陈皮山楂复合保健品", brand: "药食同源企业", type: "功能食品" },
+        { name: "柑橘绿茶饮料", brand: "农夫山泉/东方树叶系列", type: "饮料" }
+      ]
+    },
+    {
+      id: "R03",
+      trigger: { chenpi: ["F02", "F03", "F04"], auxiliary: ["乳脂肪", "卵磷脂"] },
+      product: "脂溶性黄酮-脂质纳米载体",
+      productEn: "Lipophilic Flavonoid-Lipid Nanocarrier",
+      type: "包封增溶",
+      mechanism: "川陈皮素/七甲氧基黄酮等高度脂溶性成分（logP>3）溶入乳脂或卵磷脂形成的脂质双层/纳米乳中，文献研究显示可显著提升生物利用度3-5倍。",
+      effect: "✅ 川陈皮素生物利用度提升3-5倍 | ✅ 靶向递送 | ✅ 稳定性保护",
+      caution: null,
+      score: 90,
+      literatureBase: "脂溶性黄酮纳米乳文献（食品化学原理）",
+      marketProducts: [
+        { name: "柑橘多甲氧基黄酮脂质体胶囊", brand: "功能性食品企业", type: "保健食品" },
+        { name: "脂质体维C柑橘复合饮", brand: "营养品企业", type: "功能饮品" }
+      ]
+    },
+    {
+      id: "R04",
+      trigger: { chenpi: ["P01"], auxiliary: ["β-葡聚糖", "枸杞多糖", "乳糖"] },
+      product: "复合多糖免疫调节体系",
+      productEn: "Composite Polysaccharide Immunomodulatory System",
+      type: "协同增效",
+      mechanism: "陈皮多糖（CPP）与β-葡聚糖、枸杞多糖（LBP）通过结构互补共同作用于肠道免疫细胞Toll样受体（TLR4/TLR2），协同激活先天免疫通路；与乳糖协同可选择性促进双歧杆菌生长。",
+      effect: "✅ 免疫调节协同增强 | ✅ 肠道菌群双重调节 | ✅ 降胆固醇协同",
+      caution: null,
+      score: 85,
+      literatureBase: "陈皮多糖研究（广东药学院）；枸杞多糖免疫调节文献",
+      marketProducts: [
+        { name: "陈皮燕麦奶", brand: "植物奶品牌", type: "植物基饮品" },
+        { name: "枸杞陈皮代茶饮", brand: "中式保健品牌", type: "代茶饮" },
+        { name: "多糖复合益生元产品", brand: "肠道健康品牌", type: "保健食品" }
+      ]
+    },
+    {
+      id: "R05",
+      trigger: { chenpi: ["A01"], auxiliary: ["咖啡因"] },
+      product: "辛弗林-咖啡因生物碱叠加",
+      productEn: "Synephrine-Caffeine Alkaloid Overlap",
+      type: "拮抗预警",
+      mechanism: "辛弗林（β-3肾上腺素受体激动剂）与咖啡因（腺苷受体拮抗剂）均具有心血管和中枢神经系统兴奋效应。FDA 2009年发布警示：含辛弗林+咖啡因的膳食补充剂可能导致血压升高、心率加快、心悸等不良反应。",
+      effect: "⚠️ 促代谢增强（短期） | ⚠️ 心血管兴奋风险",
+      caution: "🚨 安全警示：辛弗林+咖啡因组合可能增加心血管风险。建议：辛弗林<30mg/日 + 咖啡因<300mg/日，心血管疾病患者、孕妇禁用。",
+      score: 35,
+      literatureBase: "FDA 2009年辛弗林安全性警示；新会青柑皮辛弗林含量研究",
+      marketProducts: [
+        { name: "部分减脂代餐产品", brand: "需注意标签", type: "⚠️ 需谨慎选择" }
+      ]
+    },
+    {
+      id: "R06",
+      trigger: { chenpi: ["V01", "V03", "V04"], auxiliary: ["6-姜辣素", "6-姜酮醇", "姜烯"] },
+      product: "陈皮-姜挥发油促消化协同体",
+      productEn: "Tangerine-Ginger Volatile Oil Digestive Synergy",
+      type: "协同增效",
+      mechanism: "陈皮柠檬烯（TRPM8激动剂）与姜辣素（TRPV1激动剂）共同激活TRP通道超家族，协同促进胃液分泌、胆汁分泌和肠胃蠕动；2-甲氨基苯甲酸甲酯与姜烯挥发油产生独特香气协同。《中国药典》亦记载陈皮\"理气健脾\"、生姜\"温中开胃\"的传统配伍。",
+      effect: "✅ 促消化协同（理气+开胃）| ✅ 抗炎双重通路 | ✅ 香气协调增强",
+      caution: null,
+      score: 89,
+      literatureBase: "姜辣素促消化文献；陈皮生姜传统配伍（《中国药典》）",
+      marketProducts: [
+        { name: "陈皮生姜茶", brand: "广东凉茶品牌/固元堂", type: "传统凉茶" },
+        { name: "暖胃姜汁陈皮糖", brand: "传统食品企业", type: "糖果" },
+        { name: "姜汁陈皮奶茶（底料）", brand: "新式茶饮供应链", type: "茶饮原料" }
+      ]
+    },
+    {
+      id: "R07",
+      trigger: { chenpi: ["F01", "F02", "P01", "V03"], auxiliary: ["酪蛋白", "乳清蛋白", "乳糖", "钙"] },
+      product: "陈皮-乳基三效功能复合体",
+      productEn: "Tangerine-Milk Tri-Function Bioactive Complex",
+      type: "多重协同",
+      mechanism: "橙皮苷（[1]实测35.51mg/g）促进成骨细胞活性、增强钙吸收；乳蛋白（[食物成分表]28mg/mL酪蛋白）提供必需氨基酸；陈皮多糖（[文献]CPP免疫调节）+乳糖改善肠道菌群。三者协同构建「消化-营养-抗氧化」三效合一体系，为陈皮+牛奶项目的核心竞争力。",
+      effect: "✅ 补钙助骨（橙皮苷促进Ca吸收）| ✅ 抗氧化（多酚-蛋白复合物，DPPH↑25-40%）| ✅ 助消化（柠檬烯促肠胃蠕动）| ✅ 风味协调（乳脂+陈皮挥发油）",
+      caution: null,
+      score: 95,
+      literatureBase: "橙皮苷-乳清蛋白复合物（维普/Qikan）；川陈皮素纳米乳（食品化学）；橙皮苷促进钙吸收（药理文献）",
+      marketProducts: [
+        { name: "陈皮牛奶饮品", brand: "广泽/味全等乳品企业", type: "功能乳饮" },
+        { name: "柑橘钙+乳蛋白营养粉", brand: "保健品企业", type: "营养补充品" },
+        { name: "陈皮风味酸奶", brand: "新式酸奶品牌", type: "风味酸奶" },
+        { name: "陈皮奶茶（底料）", brand: "新式茶饮供应链", type: "茶饮原料" }
+      ]
+    },
+    {
+      id: "R08",
+      trigger: { chenpi: ["F01", "F02"], auxiliary: ["有机酸", "苹果酸"] },
+      product: "黄酮-有机酸酸性稳定体系",
+      productEn: "Flavonoid-Organic Acid Acidic Stable System",
+      type: "稳定性调节",
+      mechanism: "酸性pH（3-5）：①川陈皮素等多甲氧基黄酮在此pH下稳定性最佳；②有机酸抑制陈皮挥发油氧化；③橙皮苷在酸性条件下溶解度降低，可能析出沉淀（需配合表面活性剂或β-CD包埋）。",
+      effect: "✅ 多甲氧基黄酮稳定性增强（适合酸性饮品）| ⚠️ 橙皮苷析出风险",
+      caution: "⚠️ 酸性条件下橙皮苷可能析出沉淀，需加入表面活性剂（吐温80）或β-环糊精包埋处理后方可保持体系稳定",
+      score: 72,
+      literatureBase: "多酚-有机酸pH稳定性文献（食品化学）",
+      marketProducts: [
+        { name: "陈皮山楂果汁", brand: "果汁饮品企业", type: "果汁饮料" },
+        { name: "陈皮乌梅汤", brand: "中式饮品品牌", type: "传统饮品" }
+      ]
+    },
+    {
+      id: "R09",
+      trigger: { chenpi: ["A01"], auxiliary: ["蔗糖", "果糖", "葡萄糖", "类黑素"] },
+      product: "美拉德反应棕色化风味物质",
+      productEn: "Maillard Reaction Browning Flavor Compounds",
+      type: "热加工转化",
+      mechanism: "陈皮中微量氨基酸类物质（辛弗林含氨基结构，[1]实测2.79mg/g）与蜂蜜/红糖中还原糖在加热（>80°C）条件下发生美拉德反应，生成糠醛类、吡嗪类等具有焦糖/烘焙香气的化合物，同时产生美拉德产物（类黑素），本身具有抗氧化活性。",
+      effect: "✅ 独特焦糖-陈皮复合风味 | ✅ 美拉德产物抗氧化叠加 | ✅ 掩盖苦味",
+      caution: "⚠️ 高温（>120°C）美拉德反应可能产生丙烯酰胺（致癌物），建议控制加工温度<100°C，避免长时间加热",
+      score: 75,
+      literatureBase: "美拉德反应食品化学文献；红糖类黑素文献",
+      marketProducts: [
+        { name: "陈皮红糖姜茶", brand: "方家铺子/九制陈皮系列", type: "传统食品" },
+        { name: "陈皮蜜饯", brand: "广东特产企业", type: "休闲食品" }
+      ]
+    }
+  ],
+  predict(chenpiIds, auxiliaryName) {
+    const aux = AUXILIARY_DB[auxiliaryName];
+    if (!aux) return { results: [], score: 0 };
+    const results = [];
+    for (const rule of this.reactionRules) {
+      const chenpiMatch = rule.trigger.chenpi.some(id => chenpiIds.includes(id));
+      const auxMatch = rule.trigger.auxiliary.some(keyword =>
+        aux.components.some(c =>
+          (c.name + c.en).includes(keyword) ||
+          c.category === keyword ||
+          auxiliaryName.includes(keyword)
+        )
+      );
+      if (chenpiMatch && auxMatch) results.push(rule);
+    }
+    return {
+      auxiliaryName,
+      auxInfo: aux,
+      results: results.sort((a, b) => b.score - a.score),
+      overallScore: results.length > 0
+        ? Math.round(results.reduce((s, r) => s + r.score, 0) / results.length)
+        : 50
+    };
+  },
+  getAllChenpiIds() {
+    const ids = [];
+    Object.values(CHENPI_DB.components).forEach(arr => arr.forEach(c => ids.push(c.id)));
+    return ids;
+  }
+};
+
+// ============================================================
+// 风味搭配推荐数据库（烹饪/风味化学视角，非医疗）
+// ============================================================
+const FLAVOR_DB = {
+  chenpi: {
+    name: '新会陈皮', emoji: '🍊',
+    flavors: { citrus: 85, sweet: 60, bitter: 45, aroma: 80, fresh: 50 },
+    aroma: '柠檬烯(挥发油前调)、黄酮类(中调陈香)、柠檬苦素(微苦回甘)',
+    pairs: ['milk', 'honey', 'ginger', 'brownsugar', 'oat']
+  }
+};
+
+const FLAVOR_LABELS = {
+  citrus: '柑橘香', sweet: '甜香', bitter: '苦韵',
+  aroma: '陈香', fresh: '鲜感', spicy: '辛香',
+  floral: '花香', nutty: '坚果香', umami: '鲜味'
+};
+const FLAVOR_COLORS = {
+  citrus: '#f39c12', sweet: '#27ae60', bitter: '#8e44ad',
+  aroma: '#f1c40f', fresh: '#2980b9', spicy: '#e74c3c',
+  floral: '#ff69b4', nutty: '#9b59b6', umami: '#e67e22'
+};
+const FLAVOR_CSS = {
+  citrus: 'ft-citrus', sweet: 'ft-sweet', bitter: 'ft-bitter',
+  aroma: 'ft-aroma', fresh: 'ft-fresh', spicy: 'ft-spicy',
+  floral: 'ft-floral', nutty: 'ft-nutty', umami: 'ft-umami'
+};
+
+const CLASSIC_RECIPES = [
+  {
+    id: 'milk-chenpi', name: '陈皮奶露', emoji: '🥛',
+    desc: '陈皮丝与纯牛奶低温慢炖，陈皮的柑橘香与奶香融合，形成独特的酸甜醇厚口感，冷热皆宜。',
+    ingredients: ['新会陈皮3g', '纯牛奶250ml', '冰糖10g'],
+    method: '陈皮切丝→冷水下锅煮出香气→倒入牛奶小火加热至微沸→过滤陈皮丝→加冰糖调味。温度勿超过80°C以保留挥发性香气。',
+    history: '陈皮入馔历史可追溯至宋代《山家清供》，记载陈皮可配粥食以增香。',
+    flavors: ['citrus', 'sweet', 'aroma'],
+    score: 96, best: true
+  },
+  {
+    id: 'honey-chenpi', name: '陈皮蜂蜜饮', emoji: '🍯',
+    desc: '陈皮煮水后调入蜂蜜，柑橘清香与蜜香交织，甘中带苦、苦后回甘，口感层次丰富。',
+    ingredients: ['新会陈皮2g', '蜂蜜20g', '温水300ml'],
+    method: '陈皮煮水5min→过滤取汤→待温凉至60°C以下→调入蜂蜜（高温破坏蜂蜜酶）。建议水温50°C左右。',
+    history: '《本草纲目》载陈皮可"同补药则补、同泻药则泻"，民间亦常以陈皮配蜂蜜作日常饮品。',
+    flavors: ['citrus', 'sweet', 'bitter', 'aroma'],
+    score: 92, best: true
+  },
+  {
+    id: 'ginger-chenpi', name: '陈皮姜茶', emoji: '🫚',
+    desc: '陈皮与生姜同煮，辛香与陈香叠加，形成驱寒暖身的温热型饮品，风味浓郁有劲。',
+    ingredients: ['新会陈皮3g', '老姜10g', '红糖15g'],
+    method: '生姜拍扁→与陈皮同煮10min→加红糖调味。适合冬季热饮，煮制时间可延长至15min令香气更足。',
+    history: '粤菜中姜与陈皮为常见搭档，用于煲汤、蒸鱼，有去腥增香之效。',
+    flavors: ['citrus', 'spicy', 'aroma'],
+    score: 88, best: false
+  },
+  {
+    id: 'oat-chenpi', name: '陈皮燕麦粥', emoji: '🥣',
+    desc: '陈皮煮水后用于煮燕麦，陈皮的清香化解了燕麦的寡淡，形成饱腹感强、口感顺滑的营养早餐。',
+    ingredients: ['新会陈皮2g', '燕麦片50g', '牛奶100ml'],
+    method: '陈皮煮水取汤→去皮留汤→加入燕麦片煮至浓稠→加牛奶调质。可加少量坚果提升口感层次。',
+    history: '传统广式早茶中偶有陈皮配米面的吃法，本搭配为现代营养学视角的改良。',
+    flavors: ['citrus', 'sweet', 'nutty'],
+    score: 82, best: false
+  }
+];
+
+function calcFlavorMatch(f1, f2) {
+  const keys = Object.keys(f1);
+  let sum = 0;
+  keys.forEach(k => {
+    if (f2[k] !== undefined) sum += Math.abs(f1[k] - f2[k]);
+  });
+  return Math.round(100 - sum / keys.length * 1.2);
+}
+
+function renderChenpiFlavor() {
+  const c = FLAVOR_DB.chenpi;
+  let meterHtml = '';
+  Object.keys(c.flavors).forEach(k => {
+    const v = c.flavors[k];
+    meterHtml += `<div class="fmeter-row">
+      <span class="fmeter-label">${FLAVOR_LABELS[k]}</span>
+      <div class="fmeter-bar"><div class="fmeter-fill" style="width:${v}%;background:${FLAVOR_COLORS[k]}"></div></div>
+      <span class="fmeter-val" style="color:${FLAVOR_COLORS[k]}">${v}</span>
+    </div>`;
+  });
+  document.getElementById('chenpi-flavor-meter').innerHTML = meterHtml;
+
+  let tagHtml = '';
+  Object.keys(c.flavors).forEach(k => {
+    const v = c.flavors[k];
+    if (v >= 40) tagHtml += `<span class="flavor-tag ${FLAVOR_CSS[k]}">${FLAVOR_LABELS[k]} ${v}</span>`;
+  });
+  document.getElementById('chenpi-flavor-tags').innerHTML = tagHtml;
+}
+
+function renderRecipeList() {
+  let html = '';
+  CLASSIC_RECIPES.forEach(r => {
+    const tagHtml = r.flavors.map(f => `<span class="flavor-tag ${FLAVOR_CSS[f]}">${FLAVOR_LABELS[f]}</span>`).join('');
+    html += `<div class="recipe-card ${r.best ? 'selected' : ''}" onclick="toggleRecipeCard(this)">
+      <div class="recipe-name">${r.emoji} ${r.name}${r.best ? '<span style="font-size:10px;background:rgba(63,185,80,.2);color:#3fb950;padding:1px 6px;border-radius:8px;margin-left:auto">经典搭配</span>' : ''}</div>
+      <div class="recipe-desc">${r.desc}</div>
+      <div class="recipe-ing">食材：${r.ingredients.map(i => `<span>${i}</span>`).join(' ')}</div>
+      <div class="recipe-cook">🍳 烹饪：${r.method}</div>
+      <div class="recipe-hist">📜 ${r.history}</div>
+      <div class="recipe-score">
+        <span style="font-size:11px;color:var(--text2)">风味匹配度</span>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${r.score}%;background:${r.best ? '#3fb950' : '#58a6ff'}"></div></div>
+        <span class="score-num" style="color:${r.best ? '#3fb950' : '#58a6ff'}">${r.score}</span>
+      </div>
+      <div class="flavor-tags" style="margin-top:8px">${tagHtml}</div>
+    </div>`;
+  });
+  document.getElementById('recipe-list').innerHTML = html;
+}
+
+function renderRecipeAuxGrid() {
+  const grid = document.getElementById('recipe-aux-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  Object.keys(AUXILIARY_DB).forEach(name => {
+    const a = AUXILIARY_DB[name];
+    const div = document.createElement('div');
+    div.className = 'aux-item';
+    div.dataset.name = name;
+    div.innerHTML = `<span class="emoji">${a.icon || '🍽️'}</span><span class="aux-name">${name}</span>`;
+    div.onclick = function() { toggleRecipeAux(this, name); };
+    grid.appendChild(div);
+  });
+}
+
+let recipeSelectedAux = [];
+
+function toggleRecipeAux(el, name) {
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) {
+    if (!recipeSelectedAux.includes(name)) recipeSelectedAux.push(name);
+  } else {
+    recipeSelectedAux = recipeSelectedAux.filter(x => x !== name);
+  }
+  renderRecipeMatch();
+}
+
+function renderRecipeMatch() {
+  const resultDiv = document.getElementById('recipe-match-result');
+  const emptyDiv = document.getElementById('recipe-match-empty');
+  if (recipeSelectedAux.length === 0) {
+    resultDiv.style.display = 'none';
+    emptyDiv.style.display = 'block';
+    return;
+  }
+  emptyDiv.style.display = 'none';
+  resultDiv.style.display = 'block';
+
+  const base = FLAVOR_DB.chenpi.flavors;
+  let rows = recipeSelectedAux.map(name => {
+    const a = AUXILIARY_DB[name];
+    if (!a) return null;
+    let score = 50;
+    let reason = '';
+    if (a.flavor) {
+      score = calcFlavorMatch(base, a.flavor);
+      const topFlavor = Object.entries(a.flavor).sort((x, y) => y[1] - x[1])[0];
+      if (topFlavor) reason = `主要风味特征：${FLAVOR_LABELS[topFlavor[0]]}（强度${topFlavor[1]}）`;
+    } else {
+      reason = '主要风味特征：复合香型';
+    }
+    return { name, icon: a.icon || '🍽️', score, reason };
+  }).filter(Boolean).sort((a, b) => b.score - a.score);
+
+  let html = '<div style="font-size:13px;font-weight:600;margin-bottom:10px">与陈皮的风味匹配分析</div>';
+  rows.forEach(row => {
+    const tag = row.score >= 80 ? 'best' : row.score >= 60 ? 'good' : 'fair';
+    const tagTxt = row.score >= 80 ? '风味极佳' : row.score >= 60 ? '风味协调' : '风味反差';
+    html += `<div class="match-item ${tag === 'best' ? 'best' : ''}">
+      <div class="match-name">${row.icon} ${row.name}
+        <span class="match-score-tag match-tag-${tag}" style="margin-left:auto">${tagTxt} ${row.score}</span>
+      </div>
+      <div class="match-reason" style="margin-top:6px">${row.reason}</div>
+    </div>`;
+  });
+  html += `<div style="font-size:11px;color:var(--text2);margin-top:12px;line-height:1.6;padding:8px;background:var(--bg3);border-radius:8px">
+    💡 提示：风味匹配度基于成分化学结构相似性计算，80分以上为推荐搭配。风味评分不等同于口感喜好，实际口味因人而异。
+  </div>`;
+  resultDiv.innerHTML = html;
+}
+
+function initRecipePage() {
+  renderChenpiFlavor();
+  renderRecipeList();
+  renderRecipeAuxGrid();
+}
+
+function toggleRecipeCard(el) {
+  el.classList.toggle('selected');
+}
+
+// 全局导出
+window.CHENPI_DB = CHENPI_DB;
+window.AUXILIARY_DB = AUXILIARY_DB;
+window.FUSION_ENGINE = FUSION_ENGINE;
+</script>
+<script>
+// ============================================================
+// 全局状态
+// ============================================================
+let selectedAux = [];
+let currentParams = { temp: 60, ph: 7, time: 30 };
+let chartTempCurve = null, chartPhCurve = null, chartCpeiRadar = null;
+
+// ============================================================
+// 页面导航
+// ============================================================
+function switchPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  // 同步顶栏
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = { lab:0, cpei:1, process:2, chenpidb:3, auxdb:4, fusion:5, sources:6 };
+  if (map[id] !== undefined) tabs[map[id]].classList.add('active');
+}
+
+function setSideActive(el) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ============================================================
+// 初始化辅料网格
+// ============================================================
+function initAuxGrid() {
+  const grid = document.getElementById('aux-grid');
+  grid.innerHTML = '';
+  Object.keys(AUXILIARY_DB).forEach(name => {
+    const aux = AUXILIARY_DB[name];
+    const div = document.createElement('div');
+    div.className = 'aux-item';
+    div.dataset.name = name;
+    div.innerHTML = `<span class="emoji">${aux.icon}</span><span class="aux-name">${name}</span>`;
+    div.onclick = () => toggleAux(name, div);
+    grid.appendChild(div);
+  });
+}
+
+function toggleAux(name, el) {
+  if (selectedAux.includes(name)) {
+    selectedAux = selectedAux.filter(n => n !== name);
+    el.classList.remove('selected');
+  } else {
+    selectedAux.push(name);
+    el.classList.add('selected');
+  }
+  document.getElementById('aux-count').textContent = `已选 ${selectedAux.length} 种辅料`;
+  updateRightPanel();
+  if (selectedAux.length > 0) calcCPEI();
+}
+
+function clearAux() {
+  selectedAux = [];
+  document.querySelectorAll('.aux-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('aux-count').textContent = '已选 0 种辅料';
+  updateRightPanel();
+}
+
+// ============================================================
+// 参数同步
+// ============================================================
+function updateLabParams() {
+  const temp = +document.getElementById('lab-temp').value;
+  const ph   = +document.getElementById('lab-ph').value;
+  const time = +document.getElementById('lab-time').value;
+  document.getElementById('lab-temp-val').textContent = temp + '°C';
+  document.getElementById('lab-ph-val').textContent   = ph.toFixed(1);
+  document.getElementById('lab-time-val').textContent  = time + 'min';
+  // 同步到全局和其他滑块
+  currentParams = { temp, ph, time };
+  syncAllSliders();
+  updateRightPanel();
+  checkWarnBanner('lab-warn-banner', temp, ph);
+}
+
+function syncAllSliders() {
+  const { temp, ph, time } = currentParams;
+  ['cpei','proc'].forEach(p => {
+    const te = document.getElementById(p+'-temp');
+    const pe = document.getElementById(p+'-ph');
+    const tie = document.getElementById(p+'-time');
+    if(te){ te.value=temp; document.getElementById(p+'-temp-val').textContent=temp+'°C'; }
+    if(pe){ pe.value=ph;   document.getElementById(p+'-ph-val').textContent=ph.toFixed(1); }
+    if(tie){ tie.value=time; document.getElementById(p+'-time-val').textContent=time+'min'; }
+  });
+}
+
+function checkWarnBanner(id, temp, ph) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const msgs = [];
+  if (temp > 120) msgs.push('⚠️ 温度>120°C：挥发油大量损失，存在丙烯酰胺生成风险');
+  if (temp > 80)  msgs.push('⚠️ 温度>80°C：2-甲氨基苯甲酸甲酯等挥发油标志物将显著衰减');
+  if (ph < 4)     msgs.push('⚠️ 强酸性(pH<4)：橙皮苷可能析出沉淀');
+  if (msgs.length) { el.innerHTML = msgs.join('<br>'); el.classList.add('show'); }
+  else { el.classList.remove('show'); }
+}
+
+// ============================================================
+
+// ============================================================
+// CPEI 模型定义
+// ============================================================
+const CPEI_MODEL = {
+  calculate(auxNames, params) {
+    const { temp, ph, time } = params;
+    const allComponents = this.getComponentsByAux(auxNames);
+    const { flavonoidTotal, volatileOilRet, proteinScore, hasMilk, hasTea, hasGinger, hasBerry, uniqueCount, synergeticPairs, hasCalcium, hasPolysaccharide, hasSynephrine, hasCaffeine, hasEGCG, hasHighProtein } = this.analyzeComponents(allComponents, params);
+    let antioxidant = Math.min(100, flavonoidTotal * 0.6 + synergeticPairs * 3 + 20);
+    let digestive = Math.min(100, volatileOilRet * 0.7 + (hasGinger ? 15 : 0) + 10);
+    let nutrition = Math.min(100, proteinScore * 20 + (hasCalcium ? 10 : 0) + (hasPolysaccharide ? 10 : 0));
+    let tempDiff = Math.abs(temp - 60), phDiff = Math.abs(ph - 6.5);
+    let stability = Math.max(10, 100 - tempDiff * 0.8 - phDiff * 3 - Math.max(0, time - 30) * 0.3);
+    let safety = 100, warnings = [];
+    if (hasSynephrine && hasCaffeine) { safety -= 40; warnings.push('🚨 新会道地辮引促动物样构弹性弹等组合存在心血管风险'); }
+    if (temp > 100) { safety -= 15; warnings.push('⚠ 高温加工可能产生丙烯酚膜股'); }
+    if (hasEGCG && hasHighProtein) { safety -= 10; warnings.push('⚠ 高浓度EGCG可能导致蛍白析出'); }
+    if (safety < 0) safety = 0;
+    const score = Math.round(antioxidant * 0.30 + digestive * 0.20 + nutrition * 0.20 + stability * 0.15 + safety * 0.15);
+    let uniqueBonus = 0;
+    if (uniqueCount >= 1) uniqueBonus += 1.5;
+    if (uniqueCount >= 2) uniqueBonus += 2.0;
+    if (uniqueCount >= 3) uniqueBonus += 4.0;
+    const finalScore = Math.min(100, score + uniqueBonus);
+    const grade = finalScore >= 90 ? 'S' : finalScore >= 80 ? 'A' : finalScore >= 70 ? 'B' : finalScore >= 55 ? 'C' : 'D';
+    const gradeColors = { S:'#e74c3c', A:'#3fb950', B:'#58a6ff', C:'#e3b341', D:'#f85149' };
+    const gradeDescs = { S:'博越级 · 极具市场潜力', A:'优秀级 · 推荐进行中试', B:'良好级 · 可小批量试产', C:'一般级 · 建议优化工艺', D:'待改进 · 建议重新设计' };
+    return { score: finalScore, rawScore: score, uniqueBonus, grade, gradeColor: gradeColors[grade], gradeDesc: gradeDescs[grade], dimensions: { antioxidant: Math.round(antioxidant), digestive: Math.round(digestive), nutrition: Math.round(nutrition), stability: Math.round(stability), safety: Math.round(safety) }, warnings };
+  },
+  getComponentsByAux(auxNames) {
+    const result = { names: [], components: [] };
+    auxNames.forEach(function(name) { var aux = AUXILIARY_DB[name]; if (aux) { result.names.push(name); aux.components.forEach(function(c) { result.components.push(c); }); } });
+    return result;
+  },
+  analyzeComponents(data, params) {
+    var components = data.components, names = data.names;
+    var hasMilk = names.includes('牛奶') || names.includes('全脂奶粉');
+    var hasTea = names.includes('茶叶提取物');
+    var hasGinger = names.includes('姜汁');
+    var hasBerry = names.includes('枋柿提取物') || names.includes('山槠提取物');
+    var flavonoidTotal = 0, volatileOilRet = PROCESS_MODEL ? PROCESS_MODEL.getRetention('V03', params) : 90;
+    var proteinScore = 0, synergeticPairs = 0, uniqueCount = 2, hasCalcium = false, hasPolysaccharide = false, hasSynephrine = false, hasCaffeine = false, hasEGCG = false, hasHighProtein = false;
+    flavonoidTotal += 35.51 * 0.5 + (4.27 + 2.0 + 3.24) * 0.8;
+    components.forEach(function(c) {
+      var cat = c.category || '', nm = c.name || '';
+      if (cat.includes('黄酪') || cat.includes('粉')) flavonoidTotal += (c.content || 0) * 0.5;
+      if (cat === '蛍白质') { proteinScore += 1; if (c.content > 30) hasHighProtein = true; }
+      if (cat === '矿物质' && nm.indexOf('钙') > -1) hasCalcium = true;
+      if (cat === '多糖') hasPolysaccharide = true;
+      if (nm.indexOf('辛弗林') > -1 || nm.indexOf('Synephrine') > -1) hasSynephrine = true;
+      if (nm.indexOf('咖哥因') > -1 || nm.indexOf('Caffeine') > -1) hasCaffeine = true;
+      if (nm.indexOf('EGCG') > -1 || nm.indexOf('儿茱素') > -1) hasEGCG = true;
+    });
+    if (hasMilk) synergeticPairs += 3; if (hasTea) synergeticPairs += 2; if (hasGinger) synergeticPairs += 2; if (hasBerry) synergeticPairs += 1;
+    proteinScore = Math.min(5, proteinScore);
+    return { flavonoidTotal: flavonoidTotal, volatileOilRet: volatileOilRet, proteinScore: proteinScore, hasMilk: hasMilk, hasTea: hasTea, hasGinger: hasGinger, hasBerry: hasBerry, uniqueCount: uniqueCount, synergeticPairs: synergeticPairs, hasCalcium: hasCalcium, hasPolysaccharide: hasPolysaccharide, hasSynephrine: hasSynephrine, hasCaffeine: hasCaffeine, hasEGCG: hasEGCG, hasHighProtein: hasHighProtein };
+  }
+};
+
+// ============================================================
+// 加工参数保留率预测模型
+// ============================================================
+const PROCESS_MODEL = {
+  params: {
+    'V01': { kT: 0.045, Tref: 70, EApH: 0.15, pHref: 6.5, kTime: 0.008, baseRet: 95, name: '2-甲氨基苯甲酸甲酯', isUnique: true },
+    'V02': { kT: 0.050, Tref: 60, EApH: 0.10, pHref: 7.0, kTime: 0.010, baseRet: 90, name: 'α-甜橙醒醑', isUnique: true },
+    'V03': { kT: 0.030, Tref: 80, EApH: 0.05, pHref: 6.0, kTime: 0.005, baseRet: 100, name: 'D-柠橘枯烯', isUnique: false },
+    'V04': { kT: 0.035, Tref: 75, EApH: 0.08, pHref: 6.5, kTime: 0.006, baseRet: 98, name: 'γ-萌品烯', isUnique: false },
+    'V05': { kT: 0.040, Tref: 70, EApH: 0.10, pHref: 6.0, kTime: 0.008, baseRet: 95, name: 'β-月梨烯', isUnique: false },
+    'F01': { kT: 0.008, Tref: 100, EApH: 0.30, pHref: 7.0, kTime: 0.002, baseRet: 98, name: '橙皮苛', isUnique: false },
+    'F02': { kT: 0.005, Tref: 100, EApH: 0.05, pHref: 6.0, kTime: 0.001, baseRet: 99, name: '川陈皮素', isUnique: true },
+    'F03': { kT: 0.006, Tref: 100, EApH: 0.04, pHref: 6.0, kTime: 0.001, baseRet: 99, name: '七甲烳黄酪', isUnique: true },
+    'F04': { kT: 0.007, Tref: 100, EApH: 0.05, pHref: 6.0, kTime: 0.002, baseRet: 98, name: '楂皮素', isUnique: false },
+    'F05': { kT: 0.010, Tref: 95,  EApH: 0.25, pHref: 6.5, kTime: 0.003, baseRet: 95, name: '新橙皮苛', isUnique: false },
+    'P01': { kT: 0.004, Tref: 100, EApH: 0.10, pHref: 7.0, kTime: 0.001, baseRet: 99, name: '陈皮多糖', isUnique: false },
+    'A01': { kT: 0.015, Tref: 90,  EApH: 0.20, pHref: 5.0, kTime: 0.004, baseRet: 96, name: '辛弗林', isUnique: false }
+  },
+  getRetention: function(compId, params) {
+    var temp = params.temp, ph = params.ph, time = params.time;
+    var p = this.params[compId];
+    if (!p) return 100;
+    var deltaT = Math.max(0, temp - p.Tref);
+    var deltaPH = Math.abs(ph - p.pHref);
+    var timeEffect = Math.max(0, time - 10) * p.kTime;
+    var ret = p.baseRet * Math.exp(-p.kT * deltaT) * Math.exp(-p.EApH * deltaPH) * Math.exp(-timeEffect);
+    return Math.max(0, Math.min(100, Math.round(ret)));
+  },
+  getTempCurve: function(compId, ph, time) {
+    var data = [];
+    for (var t = 20; t <= 140; t += 10) { data.push(this.getRetention(compId, { temp: t, ph: ph, time: time })); }
+    return data;
+  },
+  getPhCurve: function(compId, temp, time) {
+    var data = [];
+    for (var p = 2; p <= 10; p += 0.5) { data.push(this.getRetention(compId, { temp: temp, ph: p, time: time })); }
+    return data;
+  },
+  getAllRetentions: function(params) {
+    return Object.entries(this.params).map(function(entry) {
+      var id = entry[0], p = entry[1];
+      return { id: id, name: p.name, isUnique: p.isUnique, retention: this.getRetention(id, params) };
+    }.bind(this)).sort(function(a, b) { if (a.isUnique && !b.isUnique) return -1; if (!a.isUnique && b.isUnique) return 1; return b.retention - a.retention; });
+  }
+};
+
+// 右侧面板更新
+// ============================================================
+function updateRightPanel() {
+  const { temp, ph, time } = currentParams;
+  document.getElementById('right-temp').textContent = temp + '°C';
+  document.getElementById('right-ph').textContent   = ph.toFixed(1);
+  document.getElementById('right-time').textContent  = time + 'min';
+
+  // 标志物保留率
+  const markers = [
+    { id:'V01', name:'2-甲氨基苯甲酸甲酯', short:'2-甲氨基苯甲酸…' },
+    { id:'F02', name:'川陈皮素', short:'川陈皮素' },
+    { id:'F03', name:'七甲氧基黄酮', short:'七甲氧基黄酮' }
+  ];
+  const html = markers.map(m => {
+    const r = PROCESS_MODEL.getRetention(m.id, currentParams);
+    const color = r >= 80 ? '#3fb950' : r >= 50 ? '#e3b341' : '#f85149';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:var(--text2)">${m.short}</span>
+        <span style="color:${color};font-weight:600">${r}%</span>
+      </div>
+      <div style="background:var(--bg4);border-radius:3px;height:4px">
+        <div style="width:${r}%;height:4px;background:${color};border-radius:3px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('right-markers').innerHTML = html;
+
+  // 已选辅料
+  document.getElementById('right-aux').innerHTML = selectedAux.length
+    ? selectedAux.map(n => `<span style="display:inline-block;background:var(--bg4);border-radius:12px;padding:2px 8px;margin:2px;font-size:11px">${AUXILIARY_DB[n].icon} ${n}</span>`).join('')
+    : '<span style="color:var(--text2)">未选择</span>';
+}
+
+// ============================================================
+// 一键全模型分析
+// ============================================================
+function runAllAnalysis() {
+  if (selectedAux.length === 0) {
+    alert('请先选择至少一种辅料！');
+    return;
+  }
+  const temp = +document.getElementById('lab-temp').value;
+  const ph   = +document.getElementById('lab-ph').value;
+  const time = +document.getElementById('lab-time').value;
+  currentParams = { temp, ph, time };
+  syncAllSliders();
+
+  // 计算并显示摘要
+  const cpeiResult = CPEI_MODEL.calculate(selectedAux, currentParams);
+  const retentions = PROCESS_MODEL.getAllRetentions(currentParams);
+  const uniqueRetained = retentions.filter(r => r.isUnique && r.retention >= 50).length;
+
+  document.getElementById('lab-result-preview').style.display = 'block';
+  document.getElementById('lab-summary-grid').innerHTML = [
+    { label:'CPEI 功效指数', value: cpeiResult.score + '分', sub: cpeiResult.gradeDesc, color: cpeiResult.gradeColor },
+    { label:'功效等级', value: cpeiResult.grade + '级', sub: '5级评定体系', color: cpeiResult.gradeColor },
+    { label:'标志物保留', value: uniqueRetained + '/5种', sub: '新会专属成分', color: '#e3b341' },
+    { label:'协同反应数', value: getFusionCount() + '条', sub: '融合预测规则命中', color: '#58a6ff' },
+    { label:'安全系数', value: cpeiResult.dimensions.safety + '分', sub: '风险评估', color: cpeiResult.dimensions.safety >= 80 ? '#3fb950' : '#f85149' },
+    { label:'成分稳定性', value: cpeiResult.dimensions.stability + '分', sub: '当前工艺参数下', color: '#bc8cff' }
+  ].map(item => `
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">${item.label}</div>
+      <div style="font-size:20px;font-weight:700;color:${item.color}">${item.value}</div>
+      <div style="font-size:11px;color:var(--text2)">${item.sub}</div>
+    </div>
+  `).join('');
+
+  // 更新右侧CPEI
+  document.getElementById('right-cpei-score').textContent = cpeiResult.score;
+  document.getElementById('right-cpei-score').style.color = cpeiResult.gradeColor;
+  document.getElementById('right-cpei-grade').textContent = cpeiResult.grade + '级 · ' + cpeiResult.gradeDesc;
+
+  // 同步更新其他页
+  calcCPEI();
+  updateProcess();
+  renderFusion();
+  updateRightPanel();
+}
+
+function getFusionCount() {
+  if (selectedAux.length === 0) return 0;
+  const allIds = FUSION_ENGINE.getAllChenpiIds();
+  let count = 0;
+  selectedAux.forEach(name => {
+    const r = FUSION_ENGINE.predict(allIds, name);
+    count += r.results.length;
+  });
+  return count;
+}
+
+// ============================================================
+// CPEI 模型计算
+// ============================================================
+function calcCPEI() {
+  const temp = +document.getElementById('cpei-temp').value;
+  const ph   = +document.getElementById('cpei-ph').value;
+  const time = +document.getElementById('cpei-time').value;
+  document.getElementById('cpei-temp-val').textContent = temp + '°C';
+  document.getElementById('cpei-ph-val').textContent   = ph.toFixed(1);
+  document.getElementById('cpei-time-val').textContent  = time + 'min';
+  currentParams = { temp, ph, time };
+  updateRightPanel();
+  checkWarnBanner('cpei-warn', temp, ph);
+
+  document.getElementById('cpei-aux-list').textContent =
+    selectedAux.length ? selectedAux.join('、') : '未选择';
+
+  if (selectedAux.length === 0) return;
+
+  const result = CPEI_MODEL.calculate(selectedAux, { temp, ph, time });
+
+  // 仪表盘数字
+  document.getElementById('cpei-num').textContent = result.score;
+  document.getElementById('cpei-num').style.color = result.gradeColor;
+  document.getElementById('cpei-grade').textContent = result.grade + ' 级';
+  document.getElementById('cpei-grade').style.color = result.gradeColor;
+  document.getElementById('cpei-desc').textContent = result.gradeDesc;
+  document.getElementById('cpei-bonus-tag').textContent =
+    result.uniqueBonus > 0 ? `🌟 新会道地性加成 +${result.uniqueBonus}%` : '';
+
+  // 圆环动画
+  const circumference = 2 * Math.PI * 58;
+  const dashArray = (result.score / 100) * circumference;
+  const ring = document.getElementById('cpei-ring-fg');
+  ring.style.strokeDasharray = dashArray + ' ' + circumference;
+  ring.setAttribute('stroke', result.gradeColor);
+
+  // 右侧更新
+  document.getElementById('right-cpei-score').textContent = result.score;
+  document.getElementById('right-cpei-score').style.color = result.gradeColor;
+  document.getElementById('right-cpei-grade').textContent = result.grade + '级 · ' + result.gradeDesc;
+
+  // 五维详情
+  const dims = result.dimensions;
+  const dimDefs = [
+    { key:'antioxidant', label:'抗氧化力', icon:'🛡️', color:'#9b59b6' },
+    { key:'digestive',   label:'消化促进', icon:'💊', color:'#27ae60' },
+    { key:'nutrition',   label:'营养完整', icon:'🥗', color:'#2980b9' },
+    { key:'stability',   label:'成分稳定', icon:'⚗️', color:'#e67e22' },
+    { key:'safety',      label:'安全系数', icon:'✅', color:'#16a085' }
+  ];
+  document.getElementById('cpei-dims').innerHTML = dimDefs.map(d => `
+    <div class="dim-row">
+      <span class="dim-label">${d.icon} ${d.label}</span>
+      <div class="dim-bar-wrap">
+        <div class="dim-bar" style="width:${dims[d.key]}%;background:${d.color}"></div>
+      </div>
+      <span class="dim-val">${dims[d.key]}</span>
+    </div>
+  `).join('') + (result.warnings.length ? `
+    <div style="margin-top:10px;padding:8px;background:rgba(248,81,73,.1);border-radius:6px;font-size:12px;color:var(--red)">
+      ${result.warnings.join('<br>')}
+    </div>
+  ` : '');
+
+  // 雷达图
+  const labels = dimDefs.map(d => d.label);
+  const data = dimDefs.map(d => dims[d.key]);
+  if (chartCpeiRadar) chartCpeiRadar.destroy();
+  chartCpeiRadar = new Chart(document.getElementById('cpei-radar'), {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'CPEI 五维评分',
+        data,
+        backgroundColor: 'rgba(88,166,255,.2)',
+        borderColor: '#58a6ff',
+        pointBackgroundColor: '#58a6ff',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { r: { min:0, max:100, ticks:{ color:'#555', stepSize:25 }, grid:{ color:'#ddd' }, pointLabels:{ color:'#222', font:{ size:12 } } } },
+      plugins: { legend:{ display:false } }
+    }
+  });
+}
+
+// ============================================================
+// 加工参数预测
+// ============================================================
+function updateProcess() {
+  const temp = +document.getElementById('proc-temp').value;
+  const ph   = +document.getElementById('proc-ph').value;
+  const time = +document.getElementById('proc-time').value;
+  document.getElementById('proc-temp-val').textContent = temp + '°C';
+  document.getElementById('proc-ph-val').textContent   = ph.toFixed(1);
+  document.getElementById('proc-time-val').textContent  = time + 'min';
+  currentParams = { temp, ph, time };
+  updateRightPanel();
+
+  // 最优提示动态更新
+  const tipEl = document.getElementById('proc-optimal-tip');
+  if (temp <= 75 && ph >= 5 && ph <= 8 && time <= 40) {
+    tipEl.style.background = 'rgba(63,185,80,.15)';
+    tipEl.style.color = '#3fb950';
+    tipEl.innerHTML = '✅ 当前参数处于最优区间，新会陈皮标志物保留率高';
+  } else {
+    tipEl.style.background = 'rgba(240,136,62,.1)';
+    tipEl.style.color = '#f0883e';
+    tipEl.innerHTML = '⚠️ 偏离最优区间，建议：温度≤75°C，pH 6-7，时间≤30min';
+  }
+
+  // 成分保留率列表
+  const retentions = PROCESS_MODEL.getAllRetentions({ temp, ph, time });
+  document.getElementById('retention-list').innerHTML = retentions.map(r => {
+    const color = r.retention >= 80 ? '#3fb950' : r.retention >= 50 ? '#e3b341' : '#f85149';
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:11px;color:${r.isUnique ? '#e3b341':'var(--text2)'}">
+          ${r.isUnique ? '⭐':''}${r.name}
+        </span>
+        <span style="font-size:12px;font-weight:600;color:${color}">${r.retention}%</span>
+      </div>
+      <div style="background:var(--bg4);border-radius:3px;height:4px">
+        <div style="width:${r.retention}%;height:4px;background:${color};border-radius:3px;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 温度曲线（显示3条特征曲线：V01、F02、F01）
+  const tempLabels = [];
+  for (let t = 20; t <= 140; t += 10) tempLabels.push(t + '°C');
+  const curveComponents = [
+    { id:'V01', label:'2-甲氨基苯甲酸甲酯（新会专属）', color:'#e3b341' },
+    { id:'F02', label:'川陈皮素（新会标志）', color:'#bc8cff' },
+    { id:'F01', label:'橙皮苷（主要黄酮）', color:'#58a6ff' },
+    { id:'V03', label:'柠檬烯（挥发油）', color:'#3fb950' }
+  ];
+  const tempDatasets = curveComponents.map(c => ({
+    label: c.label,
+    data: PROCESS_MODEL.getTempCurve(c.id, ph, time),
+    borderColor: c.color,
+    backgroundColor: 'transparent',
+    tension: 0.4, pointRadius: 3
+  }));
+  if (chartTempCurve) chartTempCurve.destroy();
+  chartTempCurve = new Chart(document.getElementById('temp-curve-chart'), {
+    type: 'line',
+    data: { labels: tempLabels, datasets: tempDatasets },
+    options: {
+      responsive: true,
+      scales: {
+        x: { ticks:{ color:'#555', maxTicksLimit:8 }, grid:{ color:'#eee' } },
+        y: { min:0, max:100, ticks:{ color:'#555' }, grid:{ color:'#eee' }, title:{ display:true, text:'保留率 (%)', color:'#333' } }
+      },
+      plugins: {
+        legend:{ labels:{ color:'#333', font:{ size:11 } } },
+        tooltip:{ callbacks:{ label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%' } }
+      }
+    }
+  });
+
+  // pH曲线
+  const phLabels = [];
+  for (let p = 2; p <= 10; p += 0.5) phLabels.push('pH ' + p.toFixed(1));
+  const phDatasets = curveComponents.map(c => ({
+    label: c.label,
+    data: PROCESS_MODEL.getPhCurve(c.id, temp, time),
+    borderColor: c.color,
+    backgroundColor: 'transparent',
+    tension: 0.4, pointRadius: 3
+  }));
+  if (chartPhCurve) chartPhCurve.destroy();
+  chartPhCurve = new Chart(document.getElementById('ph-curve-chart'), {
+    type: 'line',
+    data: { labels: phLabels, datasets: phDatasets },
+    options: {
+      responsive: true,
+      scales: {
+        x: { ticks:{ color:'#555', maxTicksLimit:10 }, grid:{ color:'#eee' } },
+        y: { min:0, max:100, ticks:{ color:'#555' }, grid:{ color:'#eee' }, title:{ display:true, text:'保留率 (%)', color:'#333' } }
+      },
+      plugins: {
+        legend:{ labels:{ color:'#333', font:{ size:11 } } },
+        tooltip:{ callbacks:{ label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// 陈皮成分库表格
+// ============================================================
+function renderChenpiTable() {
+  const rows = [];
+  const db = CHENPI_DB.components;
+  const allComps = [
+    ...db.volatileOils.map(c=>({...c, catLabel:'挥发油'})),
+    ...db.flavonoids.map(c=>({...c, catLabel:'黄酮类'})),
+    ...db.polysaccharides.map(c=>({...c, catLabel:'多糖'})),
+    ...db.alkaloids.map(c=>({...c, catLabel:'生物碱'})),
+    ...db.minerals.map(c=>({...c, catLabel:'微量元素', effect:c.effect||''}))
+  ];
+  const thead = `<thead><tr>
+    <th>成分名称</th><th>英文名</th><th>含量(mg/g)</th><th>类别</th><th>特征</th><th>主要功效</th><th>溶解性</th>
+  </tr></thead>`;
+  const tbody = '<tbody>' + allComps.map(c => `
+    <tr class="${c.isUnique ? 'highlight-row' : ''}">
+      <td style="font-weight:600;color:${c.isUnique ? '#e3b341' : 'var(--text)'}">${c.name}</td>
+      <td style="color:var(--text2);font-size:11px">${c.en || '--'}</td>
+      <td style="color:var(--blue);font-weight:600">${c.content}</td>
+      <td>${c.catLabel}</td>
+      <td>${c.isUnique ? '<span class="tag tag-unique">新会专属</span>' : ''}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:200px">${c.effect || '--'}</td>
+      <td style="font-size:11px">${c.solubility || '--'}</td>
+    </tr>
+  `).join('') + '</tbody>';
+  document.getElementById('chenpi-table').innerHTML = thead + tbody;
+}
+
+// ============================================================
+// 辅料成分库
+// ============================================================
+let currentAuxFilter = null;
+function renderAuxFilter() {
+  const names = Object.keys(AUXILIARY_DB);
+  document.getElementById('aux-filter-tabs').innerHTML =
+    `<button class="btn btn-sm ${currentAuxFilter===null?'btn-primary':'btn-outline'}" onclick="filterAux(null)">全部</button>` +
+    names.map(n => `<button class="btn btn-sm ${currentAuxFilter===n?'btn-primary':'btn-outline'}" onclick="filterAux('${n}')">${AUXILIARY_DB[n].icon} ${n}</button>`).join('');
+}
+function filterAux(name) {
+  currentAuxFilter = name;
+  renderAuxFilter();
+  renderAuxTable();
+}
+function renderAuxTable() {
+  const thead = `<thead><tr>
+    <th>辅料</th><th>成分</th><th>英文名</th><th>含量</th><th>类别</th><th>与陈皮的相互作用</th>
+  </tr></thead>`;
+  const rows = [];
+  const names = currentAuxFilter ? [currentAuxFilter] : Object.keys(AUXILIARY_DB);
+  names.forEach(name => {
+    const aux = AUXILIARY_DB[name];
+    aux.components.forEach(c => {
+      rows.push(`<tr>
+        <td>${aux.icon} ${name}</td>
+        <td style="font-weight:600">${c.name}</td>
+        <td style="color:var(--text2);font-size:11px">${c.en||'--'}</td>
+        <td style="color:var(--orange)">${c.content} ${c.unit}</td>
+        <td><span style="background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:11px">${c.category}</span></td>
+        <td style="font-size:11px;color:${c.caution?'var(--red)':'var(--text2)'};max-width:220px">
+          ${c.caution ? '⚠️ '+c.caution : (c.interaction||'--')}
+        </td>
+      </tr>`);
+    });
+  });
+  document.getElementById('aux-table').innerHTML = thead + '<tbody>' + rows.join('') + '</tbody>';
+}
+
+// ============================================================
+// 融合预测报告
+// ============================================================
+function renderFusion() {
+  if (selectedAux.length === 0) return;
+  const allIds = FUSION_ENGINE.getAllChenpiIds();
+  const allResults = [];
+  selectedAux.forEach(name => {
+    const r = FUSION_ENGINE.predict(allIds, name);
+    r.results.forEach(rule => {
+      if (!allResults.find(x => x.id === rule.id)) allResults.push(rule);
+    });
+  });
+  allResults.sort((a,b) => b.score - a.score);
+
+  if (allResults.length === 0) {
+    document.getElementById('fusion-content').innerHTML = `
+      <div class="empty-state"><div class="emoji">🔬</div><div>当前辅料组合未命中融合规则，请尝试添加牛奶、姜汁或茶叶提取物</div></div>`;
+    return;
+  }
+
+  const typeColor = { '协同增效':'#3fb950','多重协同':'#58a6ff','拮抗预警':'#f85149','包封增溶':'#bc8cff','稳定性调节':'#e3b341','热加工转化':'#f0883e' };
+  const cardClass = { '拮抗预警':'warn','稳定性调节':'stability','包封增溶':'enclose' };
+
+  const html = `
+    <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+      <div style="font-size:14px;color:var(--text2)">共命中 <strong style="color:var(--text)">${allResults.length}</strong> 条融合反应规则</div>
+    </div>
+  ` + allResults.map(r => {
+    const cls = cardClass[r.type] || '';
+    const col = typeColor[r.type] || '#3fb950';
+    const scoreColor = r.score>=80?'#3fb950':r.score>=60?'#e3b341':'#f85149';
+    const products = r.marketProducts.map(p =>
+      `<span class="product-chip">${p.name} <span class="ptype">·${p.type}</span></span>`
+    ).join('');
+    return `
+    <div class="fusion-card ${cls} fade-in">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="fusion-type" style="color:${col};background:${col}22;padding:2px 8px;border-radius:10px">${r.type}</span>
+        <span style="font-size:13px;font-weight:700;color:${scoreColor}">评分 ${r.score}</span>
+      </div>
+      <div class="fusion-name">${r.product}</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${r.productEn}</div>
+      <div class="fusion-score-bar">
+        <div class="fusion-score-fill" style="width:${r.score}%;background:${scoreColor}"></div>
+      </div>
+      <div class="fusion-mech">💡 <strong>机制：</strong>${r.mechanism}</div>
+      <div class="fusion-effect">✅ <strong>功效：</strong>${r.effect}</div>
+      ${r.caution ? `<div class="fusion-caution">${r.caution}</div>` : ''}
+      <div style="margin-top:10px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">🛒 市面富含该物质的产品：</div>
+        <div>${products}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('fusion-content').innerHTML = html;
+}
+window.addEventListener('DOMContentLoaded', () => {
+  initAuxGrid();
+  renderChenpiTable();
+  renderAuxFilter();
+  renderAuxTable();
+  updateRightPanel();
+  updateProcess();
+  initRecipePage();
+  // 初始化圆环
+  const ring = document.getElementById('cpei-ring-fg');
+  ring.style.strokeDasharray = '0 365';
+});
+</script>
+</body>
+</html>
